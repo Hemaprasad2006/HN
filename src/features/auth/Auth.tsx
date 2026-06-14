@@ -58,10 +58,10 @@ export function Auth({ onSuccess, onGuestMode }: AuthProps) {
             HN
           </div>
           <div className="space-y-1">
-            <h1 className="text-xl font-bold tracking-tight text-white">
+            <h1 className="text-2xl font-black tracking-tight text-white leading-none">
               {isRegister ? 'Create your HN account' : 'Sign in to HN'}
             </h1>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-400 mt-1">
               {isRegister ? 'Enter your details below to get started' : 'Welcome back. Please enter your details.'}
             </p>
           </div>
@@ -149,7 +149,7 @@ export function Auth({ onSuccess, onGuestMode }: AuthProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2 bg-white hover:bg-slate-200 text-slate-950 font-semibold rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
+              className="w-full py-3 bg-white hover:bg-slate-200 text-slate-950 font-bold rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
             >
               {loading ? (
                 <>
