@@ -456,3 +456,27 @@ input[type="number"] {
     linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px, 32px 32px;
 }
+
+/* iOS safe-area bottom padding for mobile bottom nav */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Mobile bottom nav active indicator */
+nav .active-indicator {
+  position: absolute;
+  top: 0;
+  width: 32px;
+  height: 2px;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  border-radius: 0 0 4px 4px;
+}
+
+/* Responsive page padding */
+@media (max-width: 1024px) {
+  .mx-auto.max-w-7xl {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { NavLink } from 'react-router';
+import { useState, useEffect } from 'react';
+import { NavLink, useLocation } from 'react-router';
 import {
   LayoutDashboard,
   Target,
@@ -17,6 +17,7 @@ import {
   Bot,
   BarChart3,
   Settings as SettingsIcon,
+  X,
 } from 'lucide-react';
 import { useGameStore } from '@/stores/useGameStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
@@ -32,30 +33,41 @@ const navItems = [
   { to: '/health', label: 'Health', icon: Heart },
   { to: '/journal', label: 'Journal', icon: PenLine },
   { to: '/achievements', label: 'Achievements', icon: Trophy },
-  { to: '/reviews', label: 'Weekly Reviews', icon: FileText },
+  { to: '/reviews', label: 'Reviews', icon: FileText },
   { to: '/coach', label: 'AI Coach', icon: Bot },
   { to: '/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/settings', label: 'Settings', icon: SettingsIcon },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const totalXP = useGameStore((s) => s.totalXP);
   const profile = useSettingsStore((s) => s.profile);
+  const location = useLocation();
 
   const level = getLevel(totalXP);
   const progress = getLevelProgress(totalXP);
   const title = getLevelTitle(level);
 
-  return (
+  // Close mobile drawer on route change
+  useEffect(() => {
+    onMobileClose?.();
+  }, [location.pathname]);
+
+  const SidebarContent = (
     <aside
-      className={`flex flex-col h-screen bg-slate-950 border-r border-white/10 transition-all duration-300 ease-in-out ${
+      className={`flex flex-col h-full bg-slate-950 border-r border-white/10 transition-all duration-300 ease-in-out ${
         collapsed ? 'w-[72px]' : 'w-64'
       }`}
     >
       {/* Logo / Title */}
       <div className="flex items-center gap-3 px-4 h-16 shrink-0">
-        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/25">
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/25 shrink-0">
           <Sparkles className="w-5 h-5 text-white" />
         </div>
         {!collapsed && (
@@ -63,10 +75,19 @@ export default function Sidebar() {
             HN
           </h1>
         )}
+        {/* Mobile close button */}
+        {mobileOpen && (
+          <button
+            onClick={onMobileClose}
+            className="ml-auto flex items-center justify-center w-8 h-8 rounded-xl text-gray-500 hover:text-white hover:bg-white/[0.06] transition-all duration-200 lg:hidden"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 flex flex-col gap-1 px-3 py-4 overflow-y-auto">
+      <nav className="flex-1 flex flex-col gap-0.5 px-3 py-4 overflow-y-auto">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -80,11 +101,7 @@ export default function Sidebar() {
               } ${collapsed ? 'justify-center' : ''}`
             }
           >
-            <item.icon
-              className={`w-5 h-5 shrink-0 transition-colors duration-200 ${
-                collapsed ? '' : ''
-              }`}
-            />
+            <item.icon className="w-5 h-5 shrink-0 transition-colors duration-200" />
             {!collapsed && <span>{item.label}</span>}
           </NavLink>
         ))}
@@ -117,6 +134,9 @@ export default function Sidebar() {
               <p className="text-[11px] text-gray-600 mt-1.5">
                 {totalXP.toLocaleString()} XP total
               </p>
+              {profile.name && (
+                <p className="text-[11px] text-gray-500 mt-0.5 truncate">{profile.name}</p>
+              )}
             </>
           ) : (
             <div className="flex flex-col items-center gap-1">
@@ -134,8 +154,8 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Collapse Button */}
-      <div className="px-3 pb-4 pt-1">
+      {/* Collapse Button — Desktop only */}
+      <div className="px-3 pb-4 pt-1 hidden lg:block">
         <button
           onClick={() => setCollapsed((c) => !c)}
           className="flex items-center justify-center w-full py-2 rounded-xl text-gray-500 hover:text-white hover:bg-white/[0.04] transition-all duration-200"
@@ -151,5 +171,29 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:flex h-screen">
+        {SidebarContent}
+      </div>
+
+      {/* Mobile Drawer Overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 flex lg:hidden">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={onMobileClose}
+          />
+          {/* Drawer */}
+          <div className="relative z-10 flex h-full">
+            {SidebarContent}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
