@@ -23,7 +23,7 @@ export const motivationalQuotes = [
   { text: "Consistency is what transforms average into excellence.", author: "Unknown" },
   { text: "Your limitation — it's only your imagination.", author: "Unknown" },
   { text: "Push yourself, because no one else is going to do it for you.", author: "Unknown" },
-  { text: "Be 1% better every day.", author: "James Clear" },
+  { text: "Be 1% better every day.", author: "HEMAPRASAD" },
   { text: "We are what we repeatedly do. Excellence is not an act, but a habit.", author: "Aristotle" },
   { text: "The man who moves a mountain begins by carrying away small stones.", author: "Confucius" },
   { text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius" },
