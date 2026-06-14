@@ -27,9 +27,9 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>()((set, get) => ({
-  token: localStorage.getItem('lifeos-auth-token'),
+  token: localStorage.getItem('hn-auth-token'),
   user: null,
-  isAuthenticated: !!localStorage.getItem('lifeos-auth-token'),
+  isAuthenticated: !!localStorage.getItem('hn-auth-token'),
   guestMode: false,
   loading: false,
   error: null,
@@ -42,7 +42,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
-      localStorage.setItem('lifeos-auth-token', data.token);
+      localStorage.setItem('hn-auth-token', data.token);
       set({ token: data.token, user: data.profile, isAuthenticated: true, loading: false });
       
       // Pull all data from backend
@@ -60,7 +60,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         method: 'POST',
         body: JSON.stringify({ email, password, name }),
       });
-      localStorage.setItem('lifeos-auth-token', data.token);
+      localStorage.setItem('hn-auth-token', data.token);
       set({ token: data.token, user: data.profile, isAuthenticated: true, loading: false });
       
       // Push any offline data
@@ -72,7 +72,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   },
 
   logout: () => {
-    localStorage.removeItem('lifeos-auth-token');
+    localStorage.removeItem('hn-auth-token');
     set({ token: null, user: null, isAuthenticated: false });
     
     // Clear stores
@@ -88,7 +88,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   },
 
   initialize: async () => {
-    const token = localStorage.getItem('lifeos-auth-token');
+    const token = localStorage.getItem('hn-auth-token');
     if (!token) return;
 
     try {

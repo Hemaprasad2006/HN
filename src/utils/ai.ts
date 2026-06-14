@@ -81,7 +81,7 @@ export function generateMockWeeklyReviewInsights(stats: {
 }): string {
   const insights: string[] = [];
 
-  insights.push(`### 🤖 LifeOS AI Coach Heuristic Insights`);
+  insights.push(`### 🤖 HN AI Coach Heuristic Insights`);
   insights.push(`*Note: Configure a Gemini/OpenAI API key in Settings to receive real-time neural coaching analysis.*`);
   insights.push(``);
 
@@ -178,7 +178,7 @@ export function generateMockAICoachResponse(
 ): string {
   const msg = userMessage.toLowerCase();
 
-  const header = `🤖 **LifeOS Heuristic Coach**:\n\n`;
+  const header = `🤖 **HN Heuristic Coach**:\n\n`;
 
   if (msg.includes('procrastinate') || msg.includes('procrastination') || msg.includes('lazy') || msg.includes('focus')) {
     return header + `Hi ${context.userName}. Procrastination is not a flaw in character; it is a mechanism for coping with stress or task-related anxiety.
@@ -213,7 +213,7 @@ Motivation is temporary; **systems and discipline** are permanent. Don't wait un
   }
 
   // Default response
-  return header + `Greetings ${context.userName}! I am your LifeOS AI Coach. 
+  return header + `Greetings ${context.userName}! I am your HN AI Coach. 
 
 Currently, I'm running in **Local Heuristic Mode** because no Gemini or OpenAI API Key has been configured in **Settings**. 
 

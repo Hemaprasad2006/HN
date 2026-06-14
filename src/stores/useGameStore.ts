@@ -54,6 +54,6 @@ export const useGameStore = create<GameState>()(
           totalXP: xpHistory.reduce((sum, e) => sum + e.amount, 0),
         }),
     }),
-    { name: 'lifeos-game' }
+    { name: 'hn-game' }
   )
 );

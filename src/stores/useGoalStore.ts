@@ -62,6 +62,6 @@ export const useGoalStore = create<GoalState>()(
         })),
       setGoals: (goals) => set({ goals }),
     }),
-    { name: 'lifeos-goals' }
+    { name: 'hn-goals' }
   )
 );

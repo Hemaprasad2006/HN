@@ -31,6 +31,6 @@ export const useSettingsStore = create<SettingsState>()(
       toggleTheme: () => set((s) => ({ theme: s.theme === 'dark' ? 'light' : 'dark' })),
       updateProfile: (updates) => set((s) => ({ profile: { ...s.profile, ...updates } })),
     }),
-    { name: 'lifeos-settings' }
+    { name: 'hn-settings' }
   )
 );

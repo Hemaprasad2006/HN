@@ -20,7 +20,7 @@ interface Message {
 const welcomeMessage: Message = {
   id: 'welcome',
   sender: 'coach',
-  text: `Hello! I am your LifeOS AI Growth Coach. 🧠
+  text: `Hello! I am your HN AI Growth Coach. 🧠
 
 I have real-time visibility into your Daily Planner, Habit logs, Study sessions, and physical Health metrics.
 
@@ -46,7 +46,7 @@ export function AICoach() {
 
   // Load chat history from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('lifeos-coach-chat-history');
+    const saved = localStorage.getItem('hn-coach-chat-history');
     if (saved) {
       try {
         setChatHistory(JSON.parse(saved));
@@ -61,7 +61,7 @@ export function AICoach() {
   // Save chat history
   const saveChat = (history: Message[]) => {
     setChatHistory(history);
-    localStorage.setItem('lifeos-coach-chat-history', JSON.stringify(history));
+    localStorage.setItem('hn-coach-chat-history', JSON.stringify(history));
   };
 
   // Scroll to bottom
@@ -126,7 +126,7 @@ export function AICoach() {
     setLoading(true);
 
     // Build the instruction prompt
-    const prompt = `You are a supportive but honest personal growth and productivity coach in a LifeOS application.
+    const prompt = `You are a supportive but honest personal growth and productivity coach in a HN application.
 Currently chatting with user: ${profile.name} (Daily Focus: "${profile.dailyFocus || 'None'}").
 Today's metrics for ${format(new Date(), 'yyyy-MM-dd')}:
 - Tasks: Completed ${todayContext.tasksCompleted}, Pending ${todayContext.tasksPending}.

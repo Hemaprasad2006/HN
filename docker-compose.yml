@@ -1,12 +1,12 @@
 services:
   db:
     image: postgres:15-alpine
-    container_name: lifeos-db
+    container_name: hn-db
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: lifeos
+      POSTGRES_DB: hn
     ports:
       - "5432:5432"
     volumes:
@@ -16,14 +16,14 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: lifeos-backend
+    container_name: hn-backend
     restart: always
     ports:
       - "5000:5000"
     environment:
       PORT: 5000
-      DATABASE_URL: "postgresql://postgres:postgres@db:5432/lifeos?schema=public"
-      JWT_SECRET: "lifeos_super_secret_jwt_sign_key_123!"
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/hn?schema=public"
+      JWT_SECRET: "hn_super_secret_jwt_sign_key_123!"
     depends_on:
       - db
 

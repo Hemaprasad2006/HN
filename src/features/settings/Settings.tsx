@@ -74,7 +74,7 @@ export function Settings() {
         if (permission === 'granted') {
           setNotificationsEnabled(true);
           updateProfile({ notificationsEnabled: true });
-          new Notification('LifeOS', { body: 'Desktop notifications enabled!' });
+          new Notification('HN', { body: 'Desktop notifications enabled!' });
         } else {
           showToast('Notification permission denied by browser.', 'error');
         }

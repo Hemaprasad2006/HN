@@ -73,6 +73,6 @@ export const useHealthStore = create<HealthState>()(
       },
       setHealthAndExercise: (healthLogs, exerciseLogs) => set({ healthLogs, exerciseLogs }),
     }),
-    { name: 'lifeos-health' }
+    { name: 'hn-health' }
   )
 );

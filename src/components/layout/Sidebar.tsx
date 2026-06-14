@@ -60,7 +60,7 @@ export default function Sidebar() {
         </div>
         {!collapsed && (
           <h1 className="text-xl font-bold gradient-text tracking-tight select-none">
-            LifeOS
+            HN
           </h1>
         )}
       </div>

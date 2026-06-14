@@ -63,6 +63,6 @@ export const useNotificationStore = create<NotificationState>()(
         })),
       clearNotifications: () => set({ inbox: [] }),
     }),
-    { name: 'lifeos-notifications' }
+    { name: 'hn-notifications' }
   )
 );

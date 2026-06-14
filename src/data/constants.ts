@@ -61,7 +61,7 @@ export const achievementsList = [
   { id: 'night-owl', title: 'Night Owl', description: 'Study after midnight', icon: '🦉', xpReward: 100, condition: 'night_owl' },
   { id: 'subject-master', title: 'Subject Master', description: 'Complete all chapters of a subject', icon: '🎖️', xpReward: 400, condition: 'subject_complete' },
   { id: 'first-review', title: 'Self-Aware', description: 'Complete your first weekly review', icon: '🔍', xpReward: 100, condition: 'weekly_review_1' },
-  { id: 'consistency-king', title: 'Consistency King', description: 'Use LifeOS for 30 days straight', icon: '👑', xpReward: 1000, condition: 'app_streak_30' },
+  { id: 'consistency-king', title: 'Consistency King', description: 'Use HN for 30 days straight', icon: '👑', xpReward: 1000, condition: 'app_streak_30' },
 ];
 
 export const goalCategoryConfig: Record<string, { label: string; color: string; icon: string }> = {

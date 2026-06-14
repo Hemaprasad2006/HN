@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'lifeos_super_secret_jwt_sign_key_123!';
+const JWT_SECRET = process.env.JWT_SECRET || 'hn_super_secret_jwt_sign_key_123!';
 
 export interface AuthRequest extends Request {
   userId?: string;

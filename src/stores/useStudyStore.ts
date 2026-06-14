@@ -73,6 +73,6 @@ export const useStudyStore = create<StudyState>()(
       },
       setSubjectsAndSessions: (subjects, sessions) => set({ subjects, sessions }),
     }),
-    { name: 'lifeos-study' }
+    { name: 'hn-study' }
   )
 );

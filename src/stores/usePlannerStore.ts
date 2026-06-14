@@ -56,6 +56,6 @@ export const usePlannerStore = create<PlannerState>()(
       },
       setTasks: (tasks) => set({ tasks }),
     }),
-    { name: 'lifeos-planner' }
+    { name: 'hn-planner' }
   )
 );

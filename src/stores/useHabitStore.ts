@@ -72,6 +72,6 @@ export const useHabitStore = create<HabitState>()(
       },
       setHabitsAndLogs: (habits, logs) => set({ habits, logs }),
     }),
-    { name: 'lifeos-habits' }
+    { name: 'hn-habits' }
   )
 );

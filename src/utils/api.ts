@@ -1,7 +1,7 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export async function apiRequest(path: string, options: RequestInit = {}) {
-  const token = localStorage.getItem('lifeos-auth-token');
+  const token = localStorage.getItem('hn-auth-token');
   
   const headers = new Headers(options.headers);
   headers.set('Content-Type', 'application/json');

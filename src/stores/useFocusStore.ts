@@ -42,6 +42,6 @@ export const useFocusStore = create<FocusState>()(
       },
       setSessions: (sessions) => set({ sessions }),
     }),
-    { name: 'lifeos-focus' }
+    { name: 'hn-focus' }
   )
 );

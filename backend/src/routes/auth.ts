@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 import { authMiddleware } from '../middleware/auth.js';
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'lifeos_super_secret_jwt_sign_key_123!';
+const JWT_SECRET = process.env.JWT_SECRET || 'hn_super_secret_jwt_sign_key_123!';
 
 router.post('/register', async (req, res) => {
   const { email, password, name } = req.body;

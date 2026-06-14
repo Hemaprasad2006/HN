@@ -34,7 +34,7 @@ export function Layout() {
       );
 
       matchingAlerts.forEach((alert) => {
-        const title = `LifeOS Reminder: ${alert.label}`;
+        const title = `HN Reminder: ${alert.label}`;
         const message = `It is now ${alert.time}. Time to check on your: ${alert.type}!`;
 
         addNotification(title, message);

@@ -34,6 +34,6 @@ export const useJournalStore = create<JournalState>()(
       },
       setEntries: (entries) => set({ entries }),
     }),
-    { name: 'lifeos-journal' }
+    { name: 'hn-journal' }
   )
 );

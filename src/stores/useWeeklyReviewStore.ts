@@ -26,6 +26,6 @@ export const useWeeklyReviewStore = create<WeeklyReviewState>()(
         })),
       setReviews: (reviews) => set({ reviews }),
     }),
-    { name: 'lifeos-weekly-reviews' }
+    { name: 'hn-weekly-reviews' }
   )
 );
