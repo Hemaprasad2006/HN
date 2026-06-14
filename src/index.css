@@ -444,3 +444,15 @@ input[type="number"] {
   border-color: rgba(0, 0, 0, 0.12);
   color: #0f172a;
 }
+
+/* Auth page premium grid background */
+.auth-bg {
+  background-color: #020617; /* Slate-950 */
+  background-image: 
+    radial-gradient(at 50% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(139, 92, 246, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.08) 0px, transparent 50%),
+    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+}
