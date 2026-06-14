@@ -494,35 +494,122 @@ nav .active-indicator {
 }
 
 @media (min-width: 768px) {
-  .page-header {
-    margin-bottom: 28px;
-  }
-  .page-title {
-    font-size: 1.75rem;
-  }
+  .page-header { margin-bottom: 28px; }
+  .page-title { font-size: 1.75rem; }
 }
 
 /* ── Tighter glass cards on mobile ── */
 @media (max-width: 640px) {
-  .glass-card {
-    border-radius: 14px;
-  }
+  .glass-card { border-radius: 14px; }
 }
 
 /* ── Responsive typography ── */
-.text-responsive-xs  { font-size: 10px; line-height: 1.4; }
-.text-responsive-sm  { font-size: 12px; line-height: 1.5; }
+.text-responsive-xs { font-size: 10px; line-height: 1.4; }
+.text-responsive-sm { font-size: 12px; line-height: 1.5; }
 
 @media (min-width: 768px) {
   .text-responsive-xs { font-size: 11px; }
   .text-responsive-sm { font-size: 13px; }
 }
 
-/* Prevent content jumping behind fixed bottom nav on mobile */
-@media (max-width: 1024px) {
-  body {
-    -webkit-overflow-scrolling: touch;
-  }
+/* ─────────────────────────────────────────────────────────────────────
+   LIGHT MODE — Full coverage fix
+   All pages use Tailwind classes like text-gray-400/500/200, text-white,
+   bg-slate-800, bg-slate-950 etc. hardcoded for dark mode.
+   These overrides make every page readable in light mode.
+───────────────────────────────────────────────────────────────────── */
+
+/* Body background */
+.light body,
+html.light {
+  background-color: #f1f5f9;
+  color: #0f172a;
 }
 
+/* All generic dark text → readable dark */
+.light .text-white          { color: #0f172a !important; }
+.light .text-gray-100       { color: #1e293b !important; }
+.light .text-gray-200       { color: #1e293b !important; }
+.light .text-gray-300       { color: #334155 !important; }
+.light .text-gray-400       { color: #475569 !important; }
+.light .text-gray-500       { color: #64748b !important; }
+.light .text-gray-600       { color: #64748b !important; }
+
+/* Slate text overrides */
+.light .text-slate-100      { color: #1e293b !important; }
+.light .text-slate-200      { color: #1e293b !important; }
+.light .text-slate-300      { color: #334155 !important; }
+.light .text-slate-400      { color: #475569 !important; }
+.light .text-slate-500      { color: #64748b !important; }
+
+/* Slate backgrounds → light surface */
+.light .bg-slate-800,
+.light .bg-slate-800\/80   { background-color: rgba(241, 245, 249, 0.9) !important; }
+.light .bg-slate-900,
+.light .bg-slate-900\/95   { background-color: #ffffff !important; }
+.light .bg-slate-950,
+.light .bg-slate-950\/40   { background-color: rgba(226, 232, 240, 0.6) !important; }
+
+/* input element override */
+.light select,
+.light input,
+.light textarea {
+  color: #0f172a !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+.light select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* white/opacity overlays → visible on light bg */
+.light .bg-white\/\[0\.02\],
+.light .bg-white\/\[0\.03\],
+.light .bg-white\/\[0\.04\],
+.light .bg-white\/\[0\.06\] { background-color: rgba(0,0,0,0.03) !important; }
+
+.light .bg-white\/\[0\.04\]:hover { background-color: rgba(0,0,0,0.05) !important; }
+
+/* Border overrides */
+.light .border-white\/10,
+.light .border-white\/\[0\.05\],
+.light .border-white\/\[0\.06\],
+.light .border-white\/\[0\.08\] { border-color: rgba(0, 0, 0, 0.1) !important; }
+
+/* Chat bubbles in AI Coach */
+.light .bg-white\/\[0\.04\] { background-color: rgba(0,0,0,0.04) !important; }
+
+/* Sidebar / nav background */
+.light nav,
+.light aside { background-color: rgba(255,255,255,0.85) !important; }
+
+/* Header bar */
+.light header { background-color: rgba(255,255,255,0.85) !important; border-bottom-color: rgba(0,0,0,0.08) !important; }
+
+/* Modal backdrop content */
+.light .modal-overlay { background: rgba(0,0,0,0.4); }
+
+/* Glass card inner content text — cascade fix */
+.light .glass-card *:not([class*="text-indigo"]):not([class*="text-emerald"]):not([class*="text-violet"]):not([class*="text-amber"]):not([class*="text-rose"]):not([class*="text-cyan"]):not([class*="gradient-text"]):not(svg):not(path) {
+  color: inherit;
+}
+
+/* Recharts tooltip on light */
+.light .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: rgba(255,255,255,0.95) !important;
+  border-color: rgba(0,0,0,0.1) !important;
+  color: #0f172a !important;
+}
+
+/* Scrollbar on light */
+html.light ::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.25);
+}
+
+/* Prevent content jumping behind fixed bottom nav on mobile */
+@media (max-width: 1024px) {
+  body { -webkit-overflow-scrolling: touch; }
+}
 
