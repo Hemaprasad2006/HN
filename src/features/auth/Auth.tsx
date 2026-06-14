@@ -81,15 +81,16 @@ export function Auth({ onSuccess, onGuestMode }: AuthProps) {
                 <label className="block text-[11px] font-medium text-slate-400">
                   Name
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 flex items-center pointer-events-none">
+                <div className="relative flex items-center">
+                  <span className="absolute left-3 inset-y-0 flex items-center text-slate-500 pointer-events-none">
                     <User className="w-4 h-4" />
                   </span>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-slate-950/40 border border-white/[0.08] focus:border-indigo-500 text-white rounded-xl py-2 pl-10 pr-4 text-xs placeholder-slate-600 focus:ring-1 focus:ring-indigo-500/30 transition-all outline-none"
+                    style={{ paddingLeft: '38px' }}
+                    className="w-full bg-slate-950/40 border border-white/[0.08] focus:border-indigo-500 text-white rounded-xl py-2 pr-4 text-xs placeholder-slate-600 focus:ring-1 focus:ring-indigo-500/30 transition-all outline-none"
                     placeholder="John Doe"
                     required
                   />
@@ -101,15 +102,16 @@ export function Auth({ onSuccess, onGuestMode }: AuthProps) {
               <label className="block text-[11px] font-medium text-slate-400">
                 Email address
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 flex items-center pointer-events-none">
+              <div className="relative flex items-center">
+                <span className="absolute left-3 inset-y-0 flex items-center text-slate-500 pointer-events-none">
                   <Mail className="w-4 h-4" />
                 </span>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-950/40 border border-white/[0.08] focus:border-indigo-500 text-white rounded-xl py-2 pl-10 pr-4 text-xs placeholder-slate-600 focus:ring-1 focus:ring-indigo-500/30 transition-all outline-none"
+                  style={{ paddingLeft: '38px' }}
+                  className="w-full bg-slate-950/40 border border-white/[0.08] focus:border-indigo-500 text-white rounded-xl py-2 pr-4 text-xs placeholder-slate-600 focus:ring-1 focus:ring-indigo-500/30 transition-all outline-none"
                   placeholder="you@example.com"
                   required
                 />
@@ -122,15 +124,16 @@ export function Auth({ onSuccess, onGuestMode }: AuthProps) {
                   Password
                 </label>
               </div>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 flex items-center pointer-events-none">
+              <div className="relative flex items-center">
+                <span className="absolute left-3 inset-y-0 flex items-center text-slate-500 pointer-events-none">
                   <Lock className="w-4 h-4" />
                 </span>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-950/40 border border-white/[0.08] focus:border-indigo-500 text-white rounded-xl py-2 pl-10 pr-9 text-xs placeholder-slate-600 focus:ring-1 focus:ring-indigo-500/30 transition-all outline-none"
+                  style={{ paddingLeft: '38px', paddingRight: '36px' }}
+                  className="w-full bg-slate-950/40 border border-white/[0.08] focus:border-indigo-500 text-white rounded-xl py-2 text-xs placeholder-slate-600 focus:ring-1 focus:ring-indigo-500/30 transition-all outline-none"
                   placeholder="••••••••"
                   required
                 />
