@@ -46,6 +46,12 @@ body {
   background: rgba(99, 102, 241, 0.5);
 }
 
+/* Custom text size utilities */
+.text-2xs {
+  font-size: 10px;
+  line-height: 1.4;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
