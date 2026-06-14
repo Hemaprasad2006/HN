@@ -1,0 +1,97 @@
+export const motivationalQuotes = [
+  { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+  { text: "It's not about perfect. It's about effort.", author: "Jillian Michaels" },
+  { text: "Small daily improvements are the key to staggering long-term results.", author: "Robin Sharma" },
+  { text: "Discipline is the bridge between goals and accomplishment.", author: "Jim Rohn" },
+  { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+  { text: "Success is the sum of small efforts repeated day in and day out.", author: "Robert Collier" },
+  { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+  { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+  { text: "The future depends on what you do today.", author: "Mahatma Gandhi" },
+  { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+  { text: "What you do today can improve all your tomorrows.", author: "Ralph Marston" },
+  { text: "Focus on being productive instead of busy.", author: "Tim Ferriss" },
+  { text: "A year from now you'll wish you had started today.", author: "Karen Lamb" },
+  { text: "The harder you work for something, the greater you'll feel when you achieve it.", author: "Unknown" },
+  { text: "Don't limit your challenges. Challenge your limits.", author: "Jerry Dunn" },
+  { text: "Wake up with determination. Go to bed with satisfaction.", author: "Unknown" },
+  { text: "The pain you feel today will be the strength you feel tomorrow.", author: "Unknown" },
+  { text: "Great things never come from comfort zones.", author: "Unknown" },
+  { text: "Dream it. Wish it. Do it.", author: "Unknown" },
+  { text: "Stay focused, go after your dreams, and keep moving toward your goals.", author: "LL Cool J" },
+  { text: "The only impossible journey is the one you never begin.", author: "Tony Robbins" },
+  { text: "Consistency is what transforms average into excellence.", author: "Unknown" },
+  { text: "Your limitation — it's only your imagination.", author: "Unknown" },
+  { text: "Push yourself, because no one else is going to do it for you.", author: "Unknown" },
+  { text: "Be 1% better every day.", author: "James Clear" },
+  { text: "We are what we repeatedly do. Excellence is not an act, but a habit.", author: "Aristotle" },
+  { text: "The man who moves a mountain begins by carrying away small stones.", author: "Confucius" },
+  { text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius" },
+  { text: "Success usually comes to those who are too busy to be looking for it.", author: "Henry David Thoreau" },
+  { text: "Hardships often prepare ordinary people for an extraordinary destiny.", author: "C.S. Lewis" },
+];
+
+export const achievementsList = [
+  { id: 'first-task', title: 'First Step', description: 'Complete your first task', icon: '🎯', xpReward: 50, condition: 'tasks_completed_1' },
+  { id: 'task-10', title: 'Task Master', description: 'Complete 10 tasks', icon: '✅', xpReward: 100, condition: 'tasks_completed_10' },
+  { id: 'task-50', title: 'Productivity Machine', description: 'Complete 50 tasks', icon: '⚡', xpReward: 250, condition: 'tasks_completed_50' },
+  { id: 'task-100', title: 'Centurion', description: 'Complete 100 tasks', icon: '💯', xpReward: 500, condition: 'tasks_completed_100' },
+  { id: 'habit-7', title: 'Week Warrior', description: '7-day habit streak', icon: '🔥', xpReward: 150, condition: 'habit_streak_7' },
+  { id: 'habit-30', title: 'Monthly Master', description: '30-day habit streak', icon: '🏆', xpReward: 500, condition: 'habit_streak_30' },
+  { id: 'habit-100', title: 'Unstoppable', description: '100-day habit streak', icon: '💎', xpReward: 1000, condition: 'habit_streak_100' },
+  { id: 'study-1', title: 'Scholar', description: 'Complete 1 hour of study', icon: '📚', xpReward: 50, condition: 'study_hours_1' },
+  { id: 'study-10', title: 'Bookworm', description: 'Complete 10 hours of study', icon: '🎓', xpReward: 200, condition: 'study_hours_10' },
+  { id: 'study-50', title: 'Knowledge Seeker', description: 'Complete 50 hours of study', icon: '🧠', xpReward: 500, condition: 'study_hours_50' },
+  { id: 'study-100', title: 'Grandmaster', description: 'Complete 100 hours of study', icon: '👑', xpReward: 1000, condition: 'study_hours_100' },
+  { id: 'focus-1', title: 'Focused', description: 'Complete first focus session', icon: '🎯', xpReward: 50, condition: 'focus_sessions_1' },
+  { id: 'focus-25', title: 'Deep Worker', description: 'Complete 25 focus sessions', icon: '🔬', xpReward: 300, condition: 'focus_sessions_25' },
+  { id: 'workout-7', title: 'Fitness Starter', description: '7-day workout streak', icon: '💪', xpReward: 150, condition: 'workout_streak_7' },
+  { id: 'workout-30', title: 'Iron Will', description: '30-day workout streak', icon: '🏋️', xpReward: 500, condition: 'workout_streak_30' },
+  { id: 'journal-7', title: 'Reflective Mind', description: 'Journal for 7 days', icon: '📝', xpReward: 150, condition: 'journal_streak_7' },
+  { id: 'journal-30', title: 'Deep Thinker', description: 'Journal for 30 days', icon: '🧘', xpReward: 500, condition: 'journal_streak_30' },
+  { id: 'water-7', title: 'Hydrated', description: 'Hit water goal 7 days in a row', icon: '💧', xpReward: 100, condition: 'water_streak_7' },
+  { id: 'sleep-7', title: 'Well Rested', description: 'Hit sleep goal 7 days in a row', icon: '😴', xpReward: 100, condition: 'sleep_streak_7' },
+  { id: 'goal-1', title: 'Goal Setter', description: 'Create your first goal', icon: '🎯', xpReward: 50, condition: 'goals_created_1' },
+  { id: 'goal-complete', title: 'Goal Crusher', description: 'Complete a goal', icon: '🏅', xpReward: 300, condition: 'goals_completed_1' },
+  { id: 'level-5', title: 'Rising Star', description: 'Reach level 5', icon: '⭐', xpReward: 200, condition: 'level_5' },
+  { id: 'level-10', title: 'Dedicated', description: 'Reach level 10', icon: '🌟', xpReward: 500, condition: 'level_10' },
+  { id: 'level-25', title: 'Legend', description: 'Reach level 25', icon: '🌠', xpReward: 1000, condition: 'level_25' },
+  { id: 'all-habits', title: 'Perfect Day', description: 'Complete all habits in a day', icon: '✨', xpReward: 200, condition: 'all_habits_day' },
+  { id: 'early-bird', title: 'Early Bird', description: 'Complete a task before 8 AM', icon: '🌅', xpReward: 100, condition: 'early_bird' },
+  { id: 'night-owl', title: 'Night Owl', description: 'Study after midnight', icon: '🦉', xpReward: 100, condition: 'night_owl' },
+  { id: 'subject-master', title: 'Subject Master', description: 'Complete all chapters of a subject', icon: '🎖️', xpReward: 400, condition: 'subject_complete' },
+  { id: 'first-review', title: 'Self-Aware', description: 'Complete your first weekly review', icon: '🔍', xpReward: 100, condition: 'weekly_review_1' },
+  { id: 'consistency-king', title: 'Consistency King', description: 'Use LifeOS for 30 days straight', icon: '👑', xpReward: 1000, condition: 'app_streak_30' },
+];
+
+export const goalCategoryConfig: Record<string, { label: string; color: string; icon: string }> = {
+  health: { label: 'Health & Fitness', color: '#10b981', icon: '💪' },
+  studies: { label: 'Studies', color: '#6366f1', icon: '📚' },
+  career: { label: 'Career', color: '#f59e0b', icon: '💼' },
+  financial: { label: 'Financial', color: '#06b6d4', icon: '💰' },
+  personal: { label: 'Personal Development', color: '#ec4899', icon: '🌱' },
+  relationships: { label: 'Relationships', color: '#ef4444', icon: '❤️' },
+  spiritual: { label: 'Spiritual', color: '#8b5cf6', icon: '🧘' },
+};
+
+export const defaultHabits = [
+  { name: 'Wake Up Early', icon: '🌅', color: '#f59e0b' },
+  { name: 'Exercise', icon: '🏋️', color: '#10b981' },
+  { name: 'Drink Water', icon: '💧', color: '#06b6d4' },
+  { name: 'Meditation', icon: '🧘', color: '#8b5cf6' },
+  { name: 'Reading', icon: '📖', color: '#6366f1' },
+  { name: 'Coding Practice', icon: '💻', color: '#ec4899' },
+  { name: 'No Social Media', icon: '📵', color: '#ef4444' },
+  { name: 'Journaling', icon: '📝', color: '#f97316' },
+];
+
+export const exerciseTypes = [
+  'Running', 'Walking', 'Cycling', 'Swimming', 'Yoga',
+  'Weight Training', 'HIIT', 'Stretching', 'Sports',
+  'Bodyweight', 'Cardio', 'Pilates', 'Dance', 'Martial Arts', 'Other'
+];
+
+export const subjectColors = [
+  '#6366f1', '#ec4899', '#10b981', '#f59e0b', '#06b6d4',
+  '#ef4444', '#8b5cf6', '#f97316', '#14b8a6', '#e11d48',
+];

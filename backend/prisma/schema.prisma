@@ -1,0 +1,235 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                      String      @id @default(uuid())
+  email                   String      @unique
+  passwordHash            String
+  name                    String      @default("User")
+  dailyFocus              String      @default("")
+  height                  Float?
+  targetWeight            Float?
+  targetWater             Int         @default(3000)
+  targetSleep             Float       @default(8.0)
+  targetStudyHours        Float       @default(4.0)
+  pomodoroWork            Int         @default(25)
+  pomodoroBreak           Int         @default(5)
+  pomodoroLongBreak       Int         @default(15)
+  geminiApiKey            String      @default("")
+  openaiApiKey            String      @default("")
+  useModel                String      @default("gemini")
+  notificationsEnabled    Boolean     @default(false)
+  reminderIntervalMinutes Int         @default(30)
+  createdAt               DateTime    @default(now())
+
+  goals                   Goal[]
+  tasks                   Task[]
+  habits                  Habit[]
+  subjects                Subject[]
+  studySessions           StudySession[]
+  focusSessions           FocusSession[]
+  healthLogs              HealthLog[]
+  exerciseLogs            ExerciseLog[]
+  journalEntries          JournalEntry[]
+  weeklyReviews           WeeklyReview[]
+  achievements            UnlockedAchievement[]
+  xpEvents                XPEvent[]
+}
+
+model Goal {
+  id          String      @id
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  why         String
+  category    String
+  deadline    String
+  priority    String
+  progress    Int         @default(0)
+  archived    Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+
+  milestones  Milestone[]
+}
+
+model Milestone {
+  id        String   @id
+  goalId    String
+  goal      Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  title     String
+  completed Boolean  @default(false)
+}
+
+model Task {
+  id               String    @id
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title            String
+  description      String
+  category         String
+  dueDate          String
+  estimatedMinutes Int
+  priority         String
+  status           String
+  completedAt      String?
+  createdAt        DateTime  @default(now())
+}
+
+model Habit {
+  id          String     @id
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  icon        String
+  color       String
+  frequency   String
+  targetCount Int
+  archived    Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+
+  logs        HabitLog[]
+}
+
+model HabitLog {
+  id        String   @id
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  date      String
+  completed Boolean  @default(false)
+  count     Int      @default(0)
+}
+
+model Subject {
+  id                String         @id
+  userId            String
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name              String
+  totalChapters     Int
+  completedChapters Int
+  difficulty        Int
+  notes             String
+  color             String
+  createdAt         DateTime       @default(now())
+
+  sessions          StudySession[]
+}
+
+model StudySession {
+  id                 String   @id
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId          String
+  subject            Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  topic              String
+  startTime          String
+  endTime            String
+  durationMinutes    Int
+  focusRating        Int
+  productivityRating Int
+  notes              String
+  createdAt          DateTime @default(now())
+}
+
+model FocusSession {
+  id              String   @id
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type            String
+  durationMinutes Int
+  breakMinutes    Int
+  subjectId       String?
+  topic           String?
+  startTime       String
+  endTime         String?
+  completed       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+}
+
+model HealthLog {
+  id             String   @id
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date           String
+  weight         Float?
+  height         Float?
+  waterIntake    Int      @default(0)
+  sleepHours     Float    @default(0.0)
+  steps          Int?
+  caloriesBurned Int?
+  createdAt      DateTime @default(now())
+}
+
+model ExerciseLog {
+  id              String   @id
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date            String
+  type            String
+  durationMinutes Int
+  intensity       String
+  caloriesBurned  Int?
+  notes           String
+  createdAt       DateTime @default(now())
+}
+
+model JournalEntry {
+  id               String   @id
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date             String
+  wentWell         String
+  toImprove        String
+  learned          String
+  gratefulFor      String
+  distractions     String
+  tomorrowPriority String
+  mood             Int
+  tags             String[]
+  createdAt        DateTime @default(now())
+}
+
+model WeeklyReview {
+  id                   String   @id
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStartDate        String
+  weekEndDate          String
+  year                 Int
+  weekNumber           Int
+  tasksCompleted       Int
+  tasksMissed          Int
+  mostProductiveDay    String
+  habitSuccessRate     Json
+  studyHoursTotal      Float
+  studySubjectMinutes  Json
+  averageSleep         Float
+  waterTotal           Int
+  workoutCount         Int
+  aiInsights           String
+  createdAt            DateTime @default(now())
+}
+
+model UnlockedAchievement {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  unlockedAt    String
+}
+
+model XPEvent {
+  id          String   @id
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String
+  amount      Int
+  description String
+  timestamp   String
+}
