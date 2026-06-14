@@ -38,8 +38,8 @@ export function Auth({ onSuccess, onGuestMode }: AuthProps) {
       <div className="w-full max-w-md bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] p-8 rounded-2xl shadow-2xl space-y-6 z-10 relative">
         {/* Branding Logo & Title */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 mb-1">
-            <Sparkles className="w-6 h-6" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 mb-1">
+            <Sparkles className="w-7 h-7" />
           </div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">
             {isRegister ? 'Create your account' : 'Sign in to HN'}
@@ -47,57 +47,57 @@ export function Auth({ onSuccess, onGuestMode }: AuthProps) {
           <p className="text-slate-400 text-sm max-w-xs mx-auto leading-relaxed">
             {isRegister
               ? 'Get started with your personal productivity cockpit today.'
-              : 'Enter your credentials below to access your dashboard.'}
+              : 'Enter your credentials below to access your HN dashboard.'}
           </p>
         </div>
 
         {/* Input fields form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold text-center animate-shake">
+            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm font-semibold text-center animate-shake">
               {error}
             </div>
           )}
 
           {isRegister && (
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider pl-0.5">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-slate-200 pl-0.5">
                 Your Name
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-slate-950/70 border border-slate-800 focus:border-indigo-500 text-white rounded-xl py-3 px-4 text-sm placeholder-slate-600 focus:ring-1 focus:ring-indigo-500/30 transition-all duration-200 outline-none"
+                className="w-full bg-slate-950/70 border border-slate-800 focus:border-indigo-500 text-white rounded-xl py-3 px-4 text-base placeholder-slate-600 focus:ring-1 focus:ring-indigo-500/30 transition-all duration-200 outline-none"
                 placeholder="John Doe"
                 required
               />
             </div>
           )}
 
-          <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider pl-0.5">
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-slate-200 pl-0.5">
               Email Address
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-slate-950/70 border border-slate-800 focus:border-indigo-500 text-white rounded-xl py-3 px-4 text-sm placeholder-slate-600 focus:ring-1 focus:ring-indigo-500/30 transition-all duration-200 outline-none"
+              className="w-full bg-slate-950/70 border border-slate-800 focus:border-indigo-500 text-white rounded-xl py-3 px-4 text-base placeholder-slate-600 focus:ring-1 focus:ring-indigo-500/30 transition-all duration-200 outline-none"
               placeholder="name@example.com"
               required
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider pl-0.5">
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-slate-200 pl-0.5">
               Password
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-slate-950/70 border border-slate-800 focus:border-indigo-500 text-white rounded-xl py-3 px-4 text-sm placeholder-slate-600 focus:ring-1 focus:ring-indigo-500/30 transition-all duration-200 outline-none"
+              className="w-full bg-slate-950/70 border border-slate-800 focus:border-indigo-500 text-white rounded-xl py-3 px-4 text-base placeholder-slate-600 focus:ring-1 focus:ring-indigo-500/30 transition-all duration-200 outline-none"
               placeholder="••••••••"
               required
             />
@@ -106,15 +106,15 @@ export function Auth({ onSuccess, onGuestMode }: AuthProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 mt-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-600/15 transition-all duration-150 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+            className="w-full py-3.5 mt-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-xl font-bold text-base shadow-lg shadow-indigo-600/15 transition-all duration-150 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
           >
             {loading ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Authenticating...
+                <Loader2 className="w-5 h-5 animate-spin" /> Authenticating...
               </>
             ) : (
               <>
-                {isRegister ? 'Create Account' : 'Sign In'} <ArrowRight className="w-4 h-4" />
+                {isRegister ? 'Create Account' : 'Sign In'} <ArrowRight className="w-5 h-5" />
               </>
             )}
           </button>
@@ -137,7 +137,7 @@ export function Auth({ onSuccess, onGuestMode }: AuthProps) {
 
           <button
             onClick={onGuestMode}
-            className="text-xs text-slate-500 hover:text-slate-400 hover:underline block mx-auto transition-colors outline-none cursor-pointer font-medium"
+            className="text-sm text-slate-500 hover:text-slate-400 hover:underline block mx-auto transition-colors outline-none cursor-pointer font-medium"
           >
             Continue as Guest (Offline Mode)
           </button>
