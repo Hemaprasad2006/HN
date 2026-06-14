@@ -82,14 +82,14 @@ export function Auth({ onSuccess, onGuestMode }: AuthProps) {
                   Name
                 </label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 flex items-center pointer-events-none">
                     <User className="w-4 h-4" />
                   </span>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-slate-950/40 border border-white/[0.08] focus:border-indigo-500 text-white rounded-xl py-2 pl-9 pr-4 text-xs placeholder-slate-600 focus:ring-1 focus:ring-indigo-500/30 transition-all outline-none"
+                    className="w-full bg-slate-950/40 border border-white/[0.08] focus:border-indigo-500 text-white rounded-xl py-2 pl-10 pr-4 text-xs placeholder-slate-600 focus:ring-1 focus:ring-indigo-500/30 transition-all outline-none"
                     placeholder="John Doe"
                     required
                   />
@@ -102,14 +102,14 @@ export function Auth({ onSuccess, onGuestMode }: AuthProps) {
                 Email address
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 flex items-center pointer-events-none">
                   <Mail className="w-4 h-4" />
                 </span>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-950/40 border border-white/[0.08] focus:border-indigo-500 text-white rounded-xl py-2 pl-9 pr-4 text-xs placeholder-slate-600 focus:ring-1 focus:ring-indigo-500/30 transition-all outline-none"
+                  className="w-full bg-slate-950/40 border border-white/[0.08] focus:border-indigo-500 text-white rounded-xl py-2 pl-10 pr-4 text-xs placeholder-slate-600 focus:ring-1 focus:ring-indigo-500/30 transition-all outline-none"
                   placeholder="you@example.com"
                   required
                 />
@@ -123,14 +123,14 @@ export function Auth({ onSuccess, onGuestMode }: AuthProps) {
                 </label>
               </div>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 flex items-center pointer-events-none">
                   <Lock className="w-4 h-4" />
                 </span>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-950/40 border border-white/[0.08] focus:border-indigo-500 text-white rounded-xl py-2 pl-9 pr-9 text-xs placeholder-slate-600 focus:ring-1 focus:ring-indigo-500/30 transition-all outline-none"
+                  className="w-full bg-slate-950/40 border border-white/[0.08] focus:border-indigo-500 text-white rounded-xl py-2 pl-10 pr-9 text-xs placeholder-slate-600 focus:ring-1 focus:ring-indigo-500/30 transition-all outline-none"
                   placeholder="••••••••"
                   required
                 />
