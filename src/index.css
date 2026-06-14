@@ -478,11 +478,51 @@ nav .active-indicator {
   border-radius: 0 0 4px 4px;
 }
 
-/* Responsive page padding */
-@media (max-width: 1024px) {
-  .mx-auto.max-w-7xl {
-    padding-left: 16px;
-    padding-right: 16px;
+/* ── Global page header pattern ── */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+
+.page-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+@media (min-width: 768px) {
+  .page-header {
+    margin-bottom: 28px;
+  }
+  .page-title {
+    font-size: 1.75rem;
   }
 }
+
+/* ── Tighter glass cards on mobile ── */
+@media (max-width: 640px) {
+  .glass-card {
+    border-radius: 14px;
+  }
+}
+
+/* ── Responsive typography ── */
+.text-responsive-xs  { font-size: 10px; line-height: 1.4; }
+.text-responsive-sm  { font-size: 12px; line-height: 1.5; }
+
+@media (min-width: 768px) {
+  .text-responsive-xs { font-size: 11px; }
+  .text-responsive-sm { font-size: 13px; }
+}
+
+/* Prevent content jumping behind fixed bottom nav on mobile */
+@media (max-width: 1024px) {
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 

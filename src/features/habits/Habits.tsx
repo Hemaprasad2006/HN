@@ -95,69 +95,69 @@ export function Habits() {
   return (
     <div className="animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-3xl font-bold gradient-text flex items-center gap-3">
-            <Repeat className="w-8 h-8 text-indigo-400" /> Habit Tracker
+          <h1 className="text-xl md:text-3xl font-bold gradient-text flex items-center gap-2">
+            <Repeat className="w-5 h-5 md:w-7 md:h-7 text-indigo-400" /> Habit Tracker
           </h1>
-          <p className="text-gray-400 mt-1">Build consistency, break barriers</p>
+          <p className="text-xs md:text-sm text-gray-400 mt-0.5">Build consistency, break barriers</p>
         </div>
         <button onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl gradient-primary text-white font-medium hover:opacity-90 transition-all hover:scale-105">
-          <Plus className="w-5 h-5" /> Add Habit
+          className="flex items-center gap-1.5 px-3 py-2 md:px-5 md:py-2.5 rounded-xl gradient-primary text-white text-xs md:text-sm font-medium hover:opacity-90 transition-all hover:scale-105">
+          <Plus className="w-4 h-4" /> Add Habit
         </button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
         {[
-          { label: 'Active Habits', value: activeHabits.length, icon: <Repeat className="w-5 h-5" />, color: 'text-indigo-400', glow: 'stat-glow-indigo' },
-          { label: 'Done Today', value: `${completedToday}/${activeHabits.length}`, icon: <CheckCircle className="w-5 h-5" />, color: 'text-emerald-400', glow: 'stat-glow-emerald' },
-          { label: 'Best Streak', value: `${bestStreak}d`, icon: <Award className="w-5 h-5" />, color: 'text-amber-400', glow: 'stat-glow-amber' },
-          { label: 'Avg Rate (30d)', value: `${avgRate}%`, icon: <TrendingUp className="w-5 h-5" />, color: 'text-violet-400', glow: 'stat-glow-violet' },
+          { label: 'Active Habits', value: activeHabits.length, icon: <Repeat className="w-4 h-4 md:w-5 md:h-5" />, color: 'text-indigo-400', glow: 'stat-glow-indigo' },
+          { label: 'Done Today', value: `${completedToday}/${activeHabits.length}`, icon: <CheckCircle className="w-4 h-4 md:w-5 md:h-5" />, color: 'text-emerald-400', glow: 'stat-glow-emerald' },
+          { label: 'Best Streak', value: `${bestStreak}d`, icon: <Award className="w-4 h-4 md:w-5 md:h-5" />, color: 'text-amber-400', glow: 'stat-glow-amber' },
+          { label: 'Avg Rate (30d)', value: `${avgRate}%`, icon: <TrendingUp className="w-4 h-4 md:w-5 md:h-5" />, color: 'text-violet-400', glow: 'stat-glow-violet' },
         ].map((stat, i) => (
-          <div key={i} className={cn('glass-card p-4 animate-slide-in-up', stat.glow)} style={{ animationDelay: `${i * 80}ms` }}>
-            <div className={cn('mb-2', stat.color)}>{stat.icon}</div>
-            <p className="text-2xl font-bold">{stat.value}</p>
-            <p className="text-xs text-gray-500">{stat.label}</p>
+          <div key={i} className={cn('glass-card p-3 md:p-4 animate-slide-in-up', stat.glow)} style={{ animationDelay: `${i * 80}ms` }}>
+            <div className={cn('mb-1.5', stat.color)}>{stat.icon}</div>
+            <p className="text-xl md:text-2xl font-bold">{stat.value}</p>
+            <p className="text-[10px] md:text-xs text-gray-500">{stat.label}</p>
           </div>
         ))}
       </div>
 
       {/* Today's Habits */}
       {activeHabits.length === 0 ? (
-        <div className="glass-card p-12 text-center mb-6">
-          <Repeat className="w-16 h-16 mx-auto text-indigo-400/50 mb-4" />
-          <h3 className="text-xl font-semibold text-gray-300">No habits yet</h3>
-          <p className="text-gray-500 mt-2">Start building your routine!</p>
+        <div className="glass-card p-8 text-center mb-5">
+          <Repeat className="w-10 h-10 mx-auto text-indigo-400/50 mb-3" />
+          <h3 className="text-base font-semibold text-gray-300">No habits yet</h3>
+          <p className="text-xs text-gray-500 mt-1">Start building your routine!</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 mb-5">
           {activeHabits.map((habit, idx) => {
             const isCompleted = todayLogs.find((l) => l.habitId === habit.id)?.completed || false;
             const streak = habitStreaks[habit.id] || { current: 0, longest: 0 };
             const rate = getCompletionRate(habit.id, 30);
             return (
               <div key={habit.id}
-                className={cn('glass-card p-4 flex items-center gap-4 animate-slide-in-up transition-all', isCompleted && 'ring-1 ring-emerald-500/30')}
+                className={cn('glass-card p-3 flex items-center gap-3 animate-slide-in-up transition-all', isCompleted && 'ring-1 ring-emerald-500/30')}
                 style={{ animationDelay: `${idx * 60}ms`, borderLeft: `3px solid ${habit.color}` }}>
                 <button onClick={() => handleToggle(habit.id, habit.name)}
                   className={cn(
-                    'w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-all',
+                    'w-10 h-10 rounded-xl flex items-center justify-center text-xl transition-all shrink-0',
                     isCompleted ? 'bg-emerald-500/20 scale-110' : 'bg-slate-800 hover:bg-slate-700'
                   )}>
                   {isCompleted ? '✅' : habit.icon}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <h4 className={cn('font-medium', isCompleted && 'text-emerald-400')}>{habit.name}</h4>
-                  <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
-                    <span className="flex items-center gap-1"><Flame className="w-3 h-3 text-orange-400" />{streak.current}d streak</span>
+                  <h4 className={cn('text-sm font-medium truncate', isCompleted && 'text-emerald-400')}>{habit.name}</h4>
+                  <div className="flex items-center gap-3 text-[10px] text-gray-500 mt-0.5">
+                    <span className="flex items-center gap-1"><Flame className="w-3 h-3 text-orange-400" />{streak.current}d</span>
                     <span>{rate}% rate</span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-500">Longest</p>
-                  <p className="text-sm font-semibold text-amber-400">{streak.longest}d</p>
+                <div className="text-right shrink-0">
+                  <p className="text-[10px] text-gray-500">Best</p>
+                  <p className="text-xs font-semibold text-amber-400">{streak.longest}d</p>
                 </div>
               </div>
             );
