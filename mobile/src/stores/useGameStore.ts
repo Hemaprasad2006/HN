@@ -25,9 +25,31 @@ const generateId = () => Math.random().toString(36).substring(2, 11);
 export const useGameStore = create<GameState>()(
   persist(
     (set, get) => ({
-      totalXP: 0,
-      xpHistory: [],
-      unlockedAchievements: [],
+      totalXP: 4200,
+      xpHistory: [
+        {
+          id: 'xp1',
+          type: 'focus',
+          amount: 1200,
+          description: 'Deep Work milestone: 10 total hours',
+          timestamp: new Date().toISOString()
+        },
+        {
+          id: 'xp2',
+          type: 'task',
+          amount: 1500,
+          description: 'Finished all weekly goals on time',
+          timestamp: new Date().toISOString()
+        },
+        {
+          id: 'xp3',
+          type: 'habit',
+          amount: 1500,
+          description: 'Morning Meditation streak (14 days)',
+          timestamp: new Date().toISOString()
+        }
+      ],
+      unlockedAchievements: ['first_session', 'habit_streak_7', 'golden_week'],
 
       addXP: (amount, type, description) =>
         set((state) => ({
@@ -64,7 +86,7 @@ export const useGameStore = create<GameState>()(
         }),
     }),
     {
-      name: 'lifeos-mobile-game',
+      name: 'lifeos-mobile-game-v2',
       storage: createJSONStorage(() => AsyncStorage),
     }
   )

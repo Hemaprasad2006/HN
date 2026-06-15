@@ -27,10 +27,49 @@ interface FocusState {
 
 const generateId = () => Math.random().toString(36).substring(2, 11);
 
+const defaultSessions = (): FocusSession[] => [
+  {
+    id: 'fs1',
+    type: 'pomodoro',
+    durationMinutes: 25,
+    breakMinutes: 5,
+    startTime: subDays(new Date(), 2).toISOString(),
+    completed: true,
+    createdAt: subDays(new Date(), 2).toISOString()
+  },
+  {
+    id: 'fs2',
+    type: 'pomodoro',
+    durationMinutes: 25,
+    breakMinutes: 5,
+    startTime: subDays(new Date(), 2).toISOString(),
+    completed: true,
+    createdAt: subDays(new Date(), 2).toISOString()
+  },
+  {
+    id: 'fs3',
+    type: 'custom',
+    durationMinutes: 50,
+    breakMinutes: 10,
+    startTime: subDays(new Date(), 1).toISOString(),
+    completed: true,
+    createdAt: subDays(new Date(), 1).toISOString()
+  },
+  {
+    id: 'fs4',
+    type: 'pomodoro',
+    durationMinutes: 25,
+    breakMinutes: 5,
+    startTime: new Date().toISOString(),
+    completed: true,
+    createdAt: new Date().toISOString()
+  }
+];
+
 export const useFocusStore = create<FocusState>()(
   persist(
     (set, get) => ({
-      sessions: [],
+      sessions: defaultSessions(),
       isFocusRunning: false,
       setIsFocusRunning: (val) => set({ isFocusRunning: val }),
       focusTaskName: 'Deep Work',
@@ -57,7 +96,7 @@ export const useFocusStore = create<FocusState>()(
       setSessions: (sessions) => set({ sessions }),
     }),
     {
-      name: 'lifeos-mobile-focus',
+      name: 'lifeos-mobile-focus-v2',
       storage: createJSONStorage(() => AsyncStorage),
     }
   )

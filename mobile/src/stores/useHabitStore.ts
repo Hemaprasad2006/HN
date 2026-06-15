@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { subDays, parseISO, startOfDay } from 'date-fns';
+import { subDays, parseISO, startOfDay, format } from 'date-fns';
 
 export interface Habit {
   id: string;
@@ -34,11 +34,25 @@ interface HabitState {
 
 const generateId = () => Math.random().toString(36).substring(2, 11);
 
+// Premium initial states
+const defaultHabits: Habit[] = [
+  { id: 'h1', name: 'Morning Meditation', icon: '🧘', color: '#8B5CF6', frequency: 'daily', targetCount: 1, archived: false },
+  { id: 'h2', name: 'Drink 3L Water', icon: '💧', color: '#3B82F6', frequency: 'daily', targetCount: 1, archived: false },
+  { id: 'h3', name: 'Read 10 Pages', icon: '📖', color: '#F59E0B', frequency: 'daily', targetCount: 1, archived: false }
+];
+
+const defaultLogs: HabitLog[] = [
+  { id: 'l1', habitId: 'h1', date: format(new Date(), 'yyyy-MM-dd'), completed: true, count: 1, createdAt: new Date().toISOString() },
+  { id: 'l2', habitId: 'h1', date: format(subDays(new Date(), 1), 'yyyy-MM-dd'), completed: true, count: 1, createdAt: new Date().toISOString() },
+  { id: 'l3', habitId: 'h1', date: format(subDays(new Date(), 2), 'yyyy-MM-dd'), completed: true, count: 1, createdAt: new Date().toISOString() },
+  { id: 'l4', habitId: 'h2', date: format(subDays(new Date(), 1), 'yyyy-MM-dd'), completed: true, count: 1, createdAt: new Date().toISOString() }
+];
+
 export const useHabitStore = create<HabitState>()(
   persist(
     (set, get) => ({
-      habits: [],
-      logs: [],
+      habits: defaultHabits,
+      logs: defaultLogs,
       addHabit: (habit) =>
         set((s) => ({
           habits: [...s.habits, { ...habit, id: generateId(), archived: false }],
@@ -76,7 +90,7 @@ export const useHabitStore = create<HabitState>()(
         
         let completedDays = 0;
         for (let i = 0; i < daysLookback; i++) {
-          const dStr = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          const dStr = format(subDays(new Date(), i), 'yyyy-MM-dd');
           if (dates.has(dStr)) {
             completedDays++;
           }
@@ -87,7 +101,7 @@ export const useHabitStore = create<HabitState>()(
       setLogs: (logs) => set({ logs }),
     }),
     {
-      name: 'lifeos-mobile-habits',
+      name: 'lifeos-mobile-habits-v2',
       storage: createJSONStorage(() => AsyncStorage),
     }
   )

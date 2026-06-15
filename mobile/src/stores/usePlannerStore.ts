@@ -28,10 +28,58 @@ interface PlannerState {
 
 const generateId = () => Math.random().toString(36).substring(2, 11);
 
+// Premium initial states
+const defaultTasks = (): Task[] => [
+  {
+    id: 't1',
+    title: 'Finish DSA revision',
+    description: 'Solve 3 tree problems & review graphs',
+    category: 'studies',
+    dueDate: format(new Date(), 'yyyy-MM-dd'),
+    estimatedMinutes: 45,
+    priority: 'high',
+    status: 'todo',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 't2',
+    title: 'Complete mobile app design review',
+    description: 'Iterate layouts based on senior product feedback',
+    category: 'work',
+    dueDate: format(new Date(), 'yyyy-MM-dd'),
+    estimatedMinutes: 30,
+    priority: 'medium',
+    status: 'todo',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 't3',
+    title: 'Evening run & stretching',
+    description: '3km zone 2 run and full-body stretch',
+    category: 'health',
+    dueDate: format(new Date(), 'yyyy-MM-dd'),
+    estimatedMinutes: 20,
+    priority: 'low',
+    status: 'todo',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 't4',
+    title: 'Write project launch post',
+    description: 'Draft announcements for the mobile companion app launch',
+    category: 'work',
+    dueDate: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
+    estimatedMinutes: 25,
+    priority: 'medium',
+    status: 'todo',
+    createdAt: new Date().toISOString()
+  }
+];
+
 export const usePlannerStore = create<PlannerState>()(
   persist(
     (set, get) => ({
-      tasks: [],
+      tasks: defaultTasks(),
       addTask: (task) =>
         set((s) => ({
           tasks: [
@@ -67,8 +115,9 @@ export const usePlannerStore = create<PlannerState>()(
       setTasks: (tasks) => set({ tasks }),
     }),
     {
-      name: 'lifeos-mobile-planner',
+      name: 'lifeos-mobile-planner-v2',
       storage: createJSONStorage(() => AsyncStorage),
     }
   )
 );
+
