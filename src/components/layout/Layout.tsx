@@ -3,23 +3,22 @@ import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { LayoutDashboard, Calendar, Timer, BarChart3, User, Plus, BookOpen, Repeat, PenLine, Dumbbell, Bell } from 'lucide-react';
+import { LayoutDashboard, Calendar, Timer, BarChart3, User, Plus, Repeat, PenLine, Dumbbell, Bell, Activity } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { to: '/dashboard', label: 'Home',    icon: LayoutDashboard },
-  { to: '/planner',   label: 'Planner', icon: Calendar },
-  { to: '/focus',     label: 'Focus',   icon: Timer },
-  { to: '/analytics', label: 'Insights',icon: BarChart3 },
-  { to: '/life',      label: 'Life',    icon: User },
+  { to: '/dashboard', label: 'Home',     icon: LayoutDashboard },
+  { to: '/planner',   label: 'Planner',  icon: Calendar },
+  { to: '/focus',     label: 'Focus',    icon: Timer },
+  { to: '/analytics', label: 'Insights', icon: BarChart3 },
+  { to: '/life',      label: 'Life',     icon: User },
 ];
 
 const FAB_ACTIONS = [
-  { label: 'Add Task', icon: Calendar, color: '#6366f1', to: '/planner' },
-  { label: 'Start Focus', icon: Timer, color: '#8b5cf6', to: '/focus' },
-  { label: 'Log Habit', icon: Repeat, color: '#10b981', to: '/habits' },
-  { label: 'Journal Entry', icon: PenLine, color: '#f59e0b', to: '/journal' },
-  { label: 'Log Workout', icon: Dumbbell, color: '#ef4444', to: '/health' },
-  { label: 'Study Session', icon: BookOpen, color: '#06b6d4', to: '/study' },
+  { label: 'Add Task',      icon: Calendar,  color: '#8B5CF6', to: '/planner' },
+  { label: 'Start Focus',   icon: Timer,     color: '#8B5CF6', to: '/focus' },
+  { label: 'Add Habit',     icon: Repeat,    color: '#22C55E', to: '/habits' },
+  { label: 'Journal',       icon: PenLine,   color: '#F59E0B', to: '/journal' },
+  { label: 'Record Health', icon: Dumbbell,  color: '#EF4444', to: '/health' },
 ];
 
 export function Layout() {
@@ -32,9 +31,8 @@ export function Layout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    document.documentElement.classList.toggle('light', theme === 'light');
-  }, [theme]);
+    document.documentElement.classList.add('dark'); // Always dark for startup quality futuristic feel
+  }, []);
 
   useEffect(() => { setFabOpen(false); }, [location.pathname]);
 
@@ -52,7 +50,7 @@ export function Layout() {
         addNotification(title, message);
         const toastId = Math.random().toString(36).substring(2, 9);
         setActiveToasts((prev) => [...prev, { id: toastId, title, message }]);
-        setTimeout(() => { setActiveToasts((prev) => prev.filter((t) => t.id !== toastId)); }, 5000);
+        setTimeout(() => { setActiveToasts((prev) => prev.filter((t) => t.id !== toastId)); }, 4000);
         if (profile.notificationsEnabled && 'Notification' in window && Notification.permission === 'granted') {
           try { new Notification(title, { body: message }); } catch (err) { console.error(err); }
         }
@@ -66,31 +64,40 @@ export function Layout() {
   const isFocusPage = location.pathname === '/focus';
 
   return (
-    <div className={`app-shell gradient-mesh ${theme}`} style={{ minHeight: '100dvh' }}>
-      <div className="fixed top-4 right-4 z-[9999] space-y-2 pointer-events-none">
+    <div className="app-shell" style={{ minHeight: '100dvh', backgroundColor: '#0B1020' }}>
+      {/* Toast Alert Banner */}
+      <div className="fixed top-4 left-4 right-4 z-[9999] space-y-2 pointer-events-none max-w-sm mx-auto">
         {activeToasts.map((toast) => (
-          <div key={toast.id} className="w-72 pointer-events-auto bg-slate-900/95 border border-white/10 p-3 rounded-2xl shadow-2xl flex gap-3 text-slate-100 backdrop-blur-xl animate-slide-in-right">
-            <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center shrink-0"><Bell className="w-4 h-4" /></div>
+          <div key={toast.id} className="w-full pointer-events-auto bg-[#141B2D]/95 border border-white/5 p-4 rounded-[20px] shadow-2xl flex gap-3 text-slate-100 backdrop-blur-xl animate-pop-in">
+            <div className="w-8 h-8 rounded-xl bg-violet-500/10 text-[#8B5CF6] flex items-center justify-center shrink-0">
+              <Bell className="w-4 h-4" />
+            </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-white truncate">{toast.title}</p>
-              <p className="text-[11px] text-gray-400 mt-0.5 leading-relaxed">{toast.message}</p>
+              <p className="text-label font-bold text-white truncate">{toast.title}</p>
+              <p className="text-secondary-text text-gray-400 mt-0.5 leading-relaxed">{toast.message}</p>
             </div>
           </div>
         ))}
       </div>
 
+      {/* Quick Capture Sheets */}
       {fabOpen && (
         <>
-          <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={() => setFabOpen(false)} />
-          <div className="fab-menu animate-slide-in-up">
-            {FAB_ACTIONS.map((action, i) => (
-              <button key={action.label} className="fab-menu-item" style={{ animationDelay: `${i * 40}ms` }} onClick={() => { setFabOpen(false); navigate(action.to); }}>
-                <span className="w-8 h-8 rounded-xl flex items-center justify-center text-white" style={{ background: action.color }}>
-                  <action.icon className="w-4 h-4" />
-                </span>
-                {action.label}
-              </button>
-            ))}
+          <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-200" onClick={() => setFabOpen(false)} />
+          <div className="fixed bottom-24 left-4 right-4 z-50 bg-[#141B2D] border border-white/5 rounded-[20px] p-4 shadow-2xl animate-slide-in-up">
+            <p className="text-label text-gray-400 font-bold uppercase tracking-wider mb-3 px-2">Quick Capture</p>
+            <div className="grid grid-cols-5 gap-2">
+              {FAB_ACTIONS.map((action, i) => (
+                <button key={action.label} 
+                  className="flex flex-col items-center gap-1.5 p-2 rounded-xl active:bg-white/5 transition-all text-center" 
+                  onClick={() => { setFabOpen(false); navigate(action.to); }}>
+                  <span className="w-11 h-11 rounded-2xl flex items-center justify-center text-white" style={{ background: action.color, boxShadow: `0 4px 12px ${action.color}33` }}>
+                    <action.icon className="w-5 h-5" />
+                  </span>
+                  <span className="text-[10px] font-bold text-gray-300 leading-tight truncate w-full">{action.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </>
       )}
@@ -103,19 +110,19 @@ export function Layout() {
         <nav className="bottom-nav">
           {NAV_ITEMS.slice(0, 2).map((item) => (
             <NavLink key={item.to} to={item.to} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <div className="nav-item-icon"><item.icon size={20} /></div>
-              <span className="nav-item-label">{item.label}</span>
+              <item.icon size={20} className="transition-transform active:scale-95" />
+              <span className="text-label font-semibold">{item.label}</span>
             </NavLink>
           ))}
           <div className="nav-fab-wrapper">
-            <button className="nav-fab" onClick={() => setFabOpen(!fabOpen)} aria-label="Quick add">
-              <Plus size={22} className={`text-white transition-transform duration-300 ${fabOpen ? 'rotate-45' : ''}`} />
+            <button className="nav-fab" onClick={() => setFabOpen(!fabOpen)} aria-label="Quick Capture">
+              <Plus size={24} className={`text-white transition-transform duration-200 ${fabOpen ? 'rotate-45' : ''}`} />
             </button>
           </div>
           {NAV_ITEMS.slice(2).map((item) => (
             <NavLink key={item.to} to={item.to} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <div className="nav-item-icon"><item.icon size={20} /></div>
-              <span className="nav-item-label">{item.label}</span>
+              <item.icon size={20} className="transition-transform active:scale-95" />
+              <span className="text-label font-semibold">{item.label}</span>
             </NavLink>
           ))}
         </nav>

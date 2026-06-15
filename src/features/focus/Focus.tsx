@@ -1,32 +1,25 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useFocusStore } from '@/stores/useFocusStore.ts';
-import { useStudyStore } from '@/stores/useStudyStore.ts';
 import { useSettingsStore } from '@/stores/useSettingsStore.ts';
 import { useGameStore } from '@/stores/useGameStore.ts';
-import { formatTimerDisplay, formatDuration, cn } from '@/utils/helpers.ts';
-import { Play, Pause, RotateCcw, SkipForward, Flame, Timer, Brain } from 'lucide-react';
+import { formatTimerDisplay, formatDuration } from '@/utils/helpers.ts';
+import { Play, Pause, RotateCcw, SkipForward } from 'lucide-react';
 
-type TimerMode = 'focus' | 'break' | 'longBreak';
-const MODE_LABELS: Record<TimerMode, string> = { focus: 'Focus', break: 'Break', longBreak: 'Long Break' };
-const MODE_COLORS: Record<TimerMode, string> = { focus: '#6366f1', break: '#10b981', longBreak: '#06b6d4' };
+type TimerMode = 'focus' | 'break';
 
 export function Focus() {
-  const { addSession, getTodayFocusMinutes, getWeeklyFocusMinutes, sessions } = useFocusStore();
-  const subjects = useStudyStore((s) => s.subjects);
+  const { addSession, getTodayFocusMinutes, sessions } = useFocusStore();
   const { profile } = useSettingsStore();
   const addXP = useGameStore((s) => s.addXP);
 
   const [timerMode, setTimerMode] = useState<TimerMode>('focus');
   const [isRunning, setIsRunning] = useState(false);
-  const [pomodoroCount, setPomodoroCount] = useState(0);
-  const [selectedSubject, setSelectedSubject] = useState('');
   const [showComplete, setShowComplete] = useState(false);
 
   const getDuration = useCallback(() => {
     switch (timerMode) {
-      case 'focus':     return profile.pomodoroWork * 60;
-      case 'break':     return profile.pomodoroBreak * 60;
-      case 'longBreak': return profile.pomodoroLongBreak * 60;
+      case 'focus': return profile.pomodoroWork * 60;
+      case 'break': return profile.pomodoroBreak * 60;
     }
   }, [timerMode, profile]);
 
@@ -36,7 +29,11 @@ export function Focus() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (!isRunning) { const d = getDuration(); setTimeLeft(d); setTotalTime(d); }
+    if (!isRunning) { 
+      const d = getDuration(); 
+      setTimeLeft(d); 
+      setTotalTime(d); 
+    }
   }, [timerMode, profile, isRunning, getDuration]);
 
   const handleTimerComplete = useCallback(() => {
@@ -45,7 +42,6 @@ export function Focus() {
     if (timerMode === 'focus') {
       const durationMins = Math.round(totalTime / 60);
       addSession({
-        subjectId: selectedSubject,
         type: 'pomodoro',
         durationMinutes: durationMins,
         breakMinutes: profile.pomodoroBreak,
@@ -53,129 +49,126 @@ export function Focus() {
         completed: true,
       });
       addXP(30, 'focus', `Completed ${durationMins}min focus session`);
-      setPomodoroCount((c) => c + 1);
+      setTimerMode('break');
+    } else {
+      setTimerMode('focus');
     }
-    setTimeout(() => setShowComplete(false), 3000);
-  }, [timerMode, totalTime, selectedSubject, addSession, addXP]);
+    setTimeout(() => setShowComplete(false), 2000);
+  }, [timerMode, totalTime, addSession, addXP, profile.pomodoroBreak]);
 
   useEffect(() => {
     if (!isRunning) return;
     intervalRef.current = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 1) { clearInterval(intervalRef.current!); handleTimerComplete(); return 0; }
+        if (prev <= 1) { 
+          clearInterval(intervalRef.current!); 
+          handleTimerComplete(); 
+          return 0; 
+        }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(intervalRef.current!);
   }, [isRunning, handleTimerComplete]);
 
-  const handleStart = () => { if (!isRunning) { if (timeLeft === totalTime) startTimeRef.current = new Date().toISOString(); setIsRunning(true); } };
-  const handlePause = () => { clearInterval(intervalRef.current!); setIsRunning(false); };
-  const handleReset = () => { clearInterval(intervalRef.current!); setIsRunning(false); const d = getDuration(); setTimeLeft(d); setTotalTime(d); };
+  const handleStart = () => { 
+    if (!isRunning) { 
+      if (timeLeft === totalTime) startTimeRef.current = new Date().toISOString(); 
+      setIsRunning(true); 
+    } 
+  };
+  const handlePause = () => { 
+    clearInterval(intervalRef.current!); 
+    setIsRunning(false); 
+  };
+  const handleReset = () => { 
+    clearInterval(intervalRef.current!); 
+    setIsRunning(false); 
+    const d = getDuration(); 
+    setTimeLeft(d); 
+    setTotalTime(d); 
+  };
   const handleSkip = () => {
-    clearInterval(intervalRef.current!); setIsRunning(false);
-    const next: TimerMode = timerMode === 'focus' ? (pomodoroCount > 0 && pomodoroCount % 4 === 0 ? 'longBreak' : 'break') : 'focus';
-    setTimerMode(next);
+    clearInterval(intervalRef.current!); 
+    setIsRunning(false);
+    setTimerMode(timerMode === 'focus' ? 'break' : 'focus');
   };
 
   const todayMin = useMemo(() => getTodayFocusMinutes(), [getTodayFocusMinutes, sessions]);
-  const weekMin = useMemo(() => getWeeklyFocusMinutes(), [getWeeklyFocusMinutes, sessions]);
-  const todaySessions = sessions.filter((s) => s.completed && s.startTime.startsWith(new Date().toISOString().slice(0, 10))).length;
 
-  const size = 260;
-  const strokeW = 14;
+  const size = 280;
+  const strokeW = 8;
   const radius = (size - strokeW) / 2;
   const circ = 2 * Math.PI * radius;
   const progress = totalTime > 0 ? timeLeft / totalTime : 0;
   const dashOffset = circ * (1 - progress);
-  const color = MODE_COLORS[timerMode];
-  const dotAngle = (-90 + (1 - progress) * 360) * (Math.PI / 180);
-  const dotX = size / 2 + radius * Math.cos(dotAngle);
-  const dotY = size / 2 + radius * Math.sin(dotAngle);
+  const color = timerMode === 'focus' ? '#8B5CF6' : '#22C55E';
 
   return (
-    <div className="animate-fade-in flex flex-col" style={{ minHeight: 'calc(100dvh - 80px)', padding: '16px 16px 24px' }}>
-      <div className="flex gap-1.5 mb-8 p-1 rounded-2xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)' }}>
-        {(['focus', 'break', 'longBreak'] as TimerMode[]).map((m) => (
-          <button key={m} onClick={() => { if (!isRunning) setTimerMode(m); }}
-            className={cn('flex-1 py-2.5 rounded-xl text-xs font-bold transition-all', timerMode === m ? 'text-white shadow-lg' : '')}
-            style={timerMode === m ? { background: color, boxShadow: `0 4px 12px ${color}44` } : { color: 'var(--text-muted)' }}>
-            {MODE_LABELS[m]}
-          </button>
-        ))}
+    <div className="animate-fade-in flex flex-col items-center justify-between" style={{ minHeight: 'calc(100dvh - 48px)', padding: '32px 16px' }}>
+      
+      {/* Immersive Header */}
+      <div className="text-center">
+        <h1 className="text-page-title text-white font-extrabold">{timerMode === 'focus' ? 'Deep Focus' : 'Short Break'}</h1>
+        <p className="text-secondary-text text-gray-400 mt-1">Silence distractions, center your mind</p>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center">
+      {/* Center Timer Display */}
+      <div className="flex-1 flex items-center justify-center my-8">
         {showComplete ? (
-          <div className="session-complete">
-            <div className="text-6xl">🎯</div>
-            <p className="text-2xl font-black gradient-text">{timerMode === 'focus' ? 'Focus Complete!' : 'Break Done!'}</p>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>+30 XP earned. Great work!</p>
+          <div className="text-center animate-celebration space-y-3">
+            <span className="text-5xl">⚡</span>
+            <h2 className="text-page-title text-[#22C55E] font-black">Session Logged</h2>
+            <p className="text-secondary-text text-gray-400">+30 XP Earned</p>
           </div>
         ) : (
-          <>
-            <div className="focus-timer-ring" style={{ width: size, height: size }}>
-              <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-                <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={strokeW} />
-                <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={color} strokeWidth={strokeW}
-                  strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={dashOffset}
-                  style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%', transition: 'stroke-dashoffset 1s linear, stroke 0.5s ease', filter: `drop-shadow(0 0 10px ${color}88)` }} />
-                <circle r={strokeW / 2 + 2} fill={color} cx={dotX} cy={dotY}
-                  style={{ filter: `drop-shadow(0 0 8px ${color})` }} />
-              </svg>
-              <div className="focus-timer-text">
-                <p className="focus-time-value">{formatTimerDisplay(timeLeft)}</p>
-                <p className="focus-time-label">{MODE_LABELS[timerMode]}</p>
-                {isRunning && <p className="text-[9px] mt-1 animate-pulse" style={{ color, letterSpacing: '0.12em', textAlign: 'center' }}>● LIVE</p>}
-              </div>
+          <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+              <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="rgba(255,255,255,0.02)" strokeWidth={strokeW} />
+              <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={color} strokeWidth={strokeW}
+                strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={dashOffset}
+                className="transition-all duration-300"
+                style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }} />
+            </svg>
+            <div className="absolute text-center">
+              <p className="text-display text-white text-5xl font-black">{formatTimerDisplay(timeLeft)}</p>
+              <p className="text-label text-gray-400 uppercase tracking-widest mt-2">{timerMode}</p>
             </div>
-
-            <div className="flex items-center gap-5 mt-10">
-              <button onClick={handleReset} className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all active:scale-90"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
-                <RotateCcw size={20} />
-              </button>
-              <button onClick={isRunning ? handlePause : handleStart}
-                className="w-24 h-24 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-2xl"
-                style={{ background: `linear-gradient(135deg, ${color}, ${color}cc)`, boxShadow: `0 8px 40px ${color}55` }}>
-                {isRunning ? <Pause size={32} className="text-white" /> : <Play size={32} className="text-white ml-1" />}
-              </button>
-              <button onClick={handleSkip} className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all active:scale-90"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
-                <SkipForward size={20} />
-              </button>
-            </div>
-
-            <div className="mt-6 w-full max-w-xs">
-              <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} disabled={isRunning} className="modal-input text-center">
-                <option value="">No subject selected</option>
-                {subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </div>
-
-            <div className="flex gap-2 mt-5">
-              {[0,1,2,3].map((i) => (
-                <div key={i} className="w-2.5 h-2.5 rounded-full transition-all duration-300"
-                  style={{ background: i < (pomodoroCount % 4) ? color : 'rgba(255,255,255,0.1)', transform: i < (pomodoroCount % 4) ? 'scale(1.3)' : 'scale(1)' }} />
-              ))}
-            </div>
-          </>
+          </div>
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-2.5 mt-6">
-        {[
-          { label: 'Today', value: formatDuration(todayMin), icon: Timer, color: '#6366f1' },
-          { label: 'Sessions', value: String(todaySessions), icon: Flame, color: '#f59e0b' },
-          { label: 'This Week', value: formatDuration(weekMin), icon: Brain, color: '#10b981' },
-        ].map((s, i) => (
-          <div key={i} className="glass-card p-3 text-center">
-            <div className="flex justify-center mb-1.5" style={{ color: s.color }}><s.icon className="w-4 h-4" /></div>
-            <p className="font-extrabold" style={{ fontSize: 15, color: 'var(--text-primary)', fontFamily: 'JetBrains Mono, monospace' }}>{s.value}</p>
-            <p className="text-[9px] uppercase tracking-wider mt-0.5" style={{ color: 'var(--text-muted)' }}>{s.label}</p>
-          </div>
-        ))}
+      {/* Controls and Total Stats */}
+      <div className="w-full flex flex-col items-center gap-8">
+        <div className="flex items-center gap-6">
+          <button onClick={handleReset} 
+            className="w-12 h-12 rounded-2xl bg-[#141B2D] border border-white/5 text-gray-400 flex items-center justify-center active:scale-90 transition-transform">
+            <RotateCcw size={18} />
+          </button>
+          
+          <button onClick={isRunning ? handlePause : handleStart}
+            className="w-20 h-20 rounded-full flex items-center justify-center transition-all active:scale-95 shadow-xl"
+            style={{ background: color, boxShadow: `0 8px 32px ${color}33` }}>
+            {isRunning ? (
+              <Pause size={28} className="text-white" />
+            ) : (
+              <Play size={28} className="text-white ml-1 fill-current" />
+            )}
+          </button>
+
+          <button onClick={handleSkip} 
+            className="w-12 h-12 rounded-2xl bg-[#141B2D] border border-white/5 text-gray-400 flex items-center justify-center active:scale-90 transition-transform">
+            <SkipForward size={18} />
+          </button>
+        </div>
+
+        {/* Labeled Stat Card */}
+        <div className="glass-card px-6 py-3 bg-[#141B2D]">
+          <p className="text-label text-gray-500 uppercase tracking-wider text-center">Today's Focus Time</p>
+          <p className="text-card-title text-white font-extrabold mt-0.5 text-center">{formatDuration(todayMin)}</p>
+        </div>
       </div>
+
     </div>
   );
 }

@@ -1,11 +1,9 @@
 import { useState, useMemo } from 'react';
 import { useJournalStore } from '@/stores/useJournalStore.ts';
 import { useGameStore } from '@/stores/useGameStore.ts';
-import { Modal } from '@/components/ui/Modal.tsx';
-import { getDateKey, formatDate, cn } from '@/utils/helpers.ts';
-import { format, subDays } from 'date-fns';
-import { PenLine, Search, Save, Calendar, Tag, X } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { getDateKey, cn } from '@/utils/helpers.ts';
+import { format } from 'date-fns';
+import { PenLine, ChevronLeft, ChevronRight, Save, Calendar, Search } from 'lucide-react';
 
 const moodEmojis: Record<number, string> = {
   1: '😢', 2: '😞', 3: '😟', 4: '😐', 5: '🙂',
@@ -20,6 +18,7 @@ export function Journal() {
   const today = getDateKey();
   const existingEntry = getEntryForDate(today);
 
+  // Reflective states
   const [wentWell, setWentWell] = useState(existingEntry?.wentWell || '');
   const [toImprove, setToImprove] = useState(existingEntry?.toImprove || '');
   const [learned, setLearned] = useState(existingEntry?.learned || '');
@@ -29,19 +28,112 @@ export function Journal() {
   const [mood, setMood] = useState(existingEntry?.mood || 5);
   const [tagsInput, setTagsInput] = useState(existingEntry?.tags?.join(', ') || '');
 
+  // Conversational step indicator: 0 = Mood, 1 = wentWell, 2 = toImprove, 3 = learned, 4 = gratefulFor, 5 = distractions, 6 = tomorrowPriority, 7 = tags
+  const [currentStep, setCurrentStep] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewingEntry, setViewingEntry] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
 
   const handleSave = () => {
     const tags = tagsInput.split(',').map((t) => t.trim()).filter(Boolean);
-    const data = { date: today, wentWell, toImprove, learned, gratefulFor, distractions, tomorrowPriority, mood, tags };
+    const data = { 
+      date: today, wentWell, toImprove, learned, gratefulFor, distractions, tomorrowPriority, mood, tags 
+    };
     if (existingEntry) {
       updateEntry(existingEntry.id, data);
     } else {
       addEntry(data);
-      addXP(20, 'journal', 'Wrote journal entry');
+      addXP(20, 'journal', 'Completed daily reflection journal');
     }
+    setCurrentStep(0);
   };
+
+  const stepsList = [
+    {
+      title: "Daily Mood",
+      question: "How are you feeling today?",
+      render: () => (
+        <div className="flex flex-wrap gap-2.5 justify-center py-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((m) => (
+            <button key={m} onClick={() => setMood(m)}
+              className={cn(
+                'w-12 h-12 rounded-2xl flex items-center justify-center text-xl transition-all duration-150 active:scale-90',
+                mood === m ? 'bg-[#8B5CF6]/20 border border-[#8B5CF6] scale-110' : 'bg-[#141B2D]/55 border border-white/5 hover:bg-[#1E293B]'
+              )}>
+              {getMoodEmoji(m)}
+            </button>
+          ))}
+        </div>
+      )
+    },
+    {
+      title: "Reflection: Wins",
+      question: "What went well today?",
+      placeholder: "Celebrate small or big wins...",
+      render: () => (
+        <textarea value={wentWell} onChange={(e) => setWentWell(e.target.value)} rows={4}
+          className="modal-input resize-none" placeholder="I finished my core goals, had a good conversation..." />
+      )
+    },
+    {
+      title: "Reflection: Improvements",
+      question: "What could you have done better?",
+      placeholder: "Identify adjustments for tomorrow...",
+      render: () => (
+        <textarea value={toImprove} onChange={(e) => setToImprove(e.target.value)} rows={4}
+          className="modal-input resize-none" placeholder="I could have stayed off social media during study sessions..." />
+      )
+    },
+    {
+      title: "Reflection: Learnings",
+      question: "What did you learn today?",
+      placeholder: "Write down new concepts or insights...",
+      render: () => (
+        <textarea value={learned} onChange={(e) => setLearned(e.target.value)} rows={4}
+          className="modal-input resize-none" placeholder="I learned how to optimize hooks, studied database indexes..." />
+      )
+    },
+    {
+      title: "Reflection: Gratitude",
+      question: "What are you grateful for?",
+      placeholder: "Name 1-3 things that made you happy...",
+      render: () => (
+        <textarea value={gratefulFor} onChange={(e) => setGratefulFor(e.target.value)} rows={4}
+          className="modal-input resize-none" placeholder="Good weather, family health, progress on my projects..." />
+      )
+    },
+    {
+      title: "Reflection: Focus",
+      question: "What distracted you?",
+      placeholder: "Identify attention leaks...",
+      render: () => (
+        <textarea value={distractions} onChange={(e) => setDistractions(e.target.value)} rows={4}
+          className="modal-input resize-none" placeholder="Phone notifications, multitasking, noise..." />
+      )
+    },
+    {
+      title: "Reflection: Tomorrow",
+      question: "What is tomorrow's absolute priority?",
+      placeholder: "Choose one single high priority...",
+      render: () => (
+        <textarea value={tomorrowPriority} onChange={(e) => setTomorrowPriority(e.target.value)} rows={4}
+          className="modal-input resize-none" placeholder="Complete the chemistry review questions..." />
+      )
+    },
+    {
+      title: "Reflection: Meta tags",
+      question: "Add tag keywords",
+      placeholder: "e.g. productive, calm, learning",
+      render: () => (
+        <div className="space-y-4">
+          <input value={tagsInput} onChange={(e) => setTagsInput(e.target.value)}
+            className="modal-input" placeholder="comma-separated tags..." />
+          <button onClick={handleSave} className="w-full btn-primary flex items-center justify-center gap-2">
+            <Save className="w-4 h-4" /> {existingEntry ? 'Update Reflections' : 'Complete Log'}
+          </button>
+        </div>
+      )
+    }
+  ];
 
   const pastEntries = useMemo(() => {
     let filtered = [...entries].sort((a, b) => b.date.localeCompare(a.date));
@@ -56,188 +148,122 @@ export function Journal() {
     return filtered;
   }, [entries, searchQuery]);
 
-  const viewEntry = entries.find((e) => e.id === viewingEntry);
-
-  // Mood trend data
-  const moodData = useMemo(() => {
-    const data: { date: string; mood: number }[] = [];
-    for (let i = 29; i >= 0; i--) {
-      const d = format(subDays(new Date(), i), 'yyyy-MM-dd');
-      const entry = entries.find((e) => e.date === d);
-      if (entry) data.push({ date: format(new Date(d), 'MMM d'), mood: entry.mood });
-    }
-    return data;
-  }, [entries]);
-
-  const avgMood = useMemo(() => {
-    if (entries.length === 0) return 0;
-    return Math.round(entries.reduce((s, e) => s + e.mood, 0) / entries.length * 10) / 10;
-  }, [entries]);
-
-  const questionStyle = "w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-white/10 text-white placeholder-gray-500 resize-none text-sm focus:border-indigo-500";
-
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in flex flex-col gap-6" style={{ paddingBottom: '24px' }}>
+      
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold gradient-text flex items-center gap-3">
-          <PenLine className="w-8 h-8 text-indigo-400" /> Journal & Reflection
-        </h1>
-        <p className="text-gray-400 mt-1">Reflect, learn, and grow every day</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-page-title text-white font-extrabold flex items-center gap-2">
+            <PenLine className="w-6 h-6 text-violet-400" /> Journal
+          </h1>
+          <p className="text-secondary-text text-gray-400 mt-1">Converse with yourself, capture day logs</p>
+        </div>
+        <button onClick={() => setShowHistory(!showHistory)} 
+          className="text-label text-[#8B5CF6] font-bold border border-[#8B5CF6]/20 bg-[#8B5CF6]/5 px-3 py-1.5 rounded-xl">
+          {showHistory ? 'Diary Log' : 'History'}
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Today's Entry */}
-        <div className="lg:col-span-2">
-          <div className="glass-card p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="font-semibold flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-indigo-400" />
-                {format(new Date(), 'EEEE, MMMM d, yyyy')}
-              </h3>
-              {existingEntry && <span className="text-xs text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-full">Saved</span>}
-            </div>
-
-            {/* Mood selector */}
-            <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-300 mb-2">How are you feeling?</label>
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((m) => (
-                  <button key={m} onClick={() => setMood(m)}
-                    className={cn(
-                      'w-10 h-10 rounded-lg flex items-center justify-center text-lg transition-all',
-                      mood === m ? 'bg-indigo-500/30 ring-2 ring-indigo-500 scale-110' : 'bg-slate-800 hover:bg-slate-700'
-                    )}>
-                    {getMoodEmoji(m)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {[
-                { label: '✨ What went well today?', value: wentWell, setter: setWentWell, placeholder: 'Celebrate your wins...' },
-                { label: '🔄 What could I improve?', value: toImprove, setter: setToImprove, placeholder: 'Areas for growth...' },
-                { label: '💡 What did I learn today?', value: learned, setter: setLearned, placeholder: 'New insights...' },
-                { label: '🙏 What am I grateful for?', value: gratefulFor, setter: setGratefulFor, placeholder: 'Express gratitude...' },
-                { label: '🔕 What distracted me?', value: distractions, setter: setDistractions, placeholder: 'Identify distractions...' },
-                { label: '🎯 Tomorrow\'s priority?', value: tomorrowPriority, setter: setTomorrowPriority, placeholder: 'One main focus for tomorrow...' },
-              ].map((q, i) => (
-                <div key={i}>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">{q.label}</label>
-                  <textarea value={q.value} onChange={(e) => q.setter(e.target.value)}
-                    className={questionStyle} rows={2} placeholder={q.placeholder} />
-                </div>
-              ))}
-            </div>
-
-            {/* Tags */}
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-300 mb-1 flex items-center gap-1">
-                <Tag className="w-3.5 h-3.5" /> Tags (comma-separated)
-              </label>
-              <input value={tagsInput} onChange={(e) => setTagsInput(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-800/80 border border-white/10 text-white placeholder-gray-500 text-sm"
-                placeholder="e.g., productive, focused, tired..." />
-            </div>
-
-            <button onClick={handleSave}
-              className="w-full mt-5 py-3 rounded-xl gradient-primary text-white font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2">
-              <Save className="w-5 h-5" /> {existingEntry ? 'Update Entry' : 'Save Entry'}
-            </button>
+      {!showHistory ? (
+        /* Conversational step container */
+        <div className="flex flex-col gap-5">
+          {/* Header indicator bar */}
+          <div className="flex items-center justify-between px-1">
+            <span className="text-label text-gray-500 font-bold uppercase tracking-wider">
+              {stepsList[currentStep].title}
+            </span>
+            <span className="text-label text-[#8B5CF6] font-bold">
+              Step {currentStep + 1} of {stepsList.length}
+            </span>
           </div>
 
-          {/* Mood Trend */}
-          {moodData.length > 1 && (
-            <div className="glass-card p-5 mt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-gray-300">Mood Trend (30 days)</h3>
-                <span className="text-sm text-indigo-400 font-medium">Avg: {avgMood} {getMoodEmoji(Math.round(avgMood))}</span>
+          {/* Staggered progress dot list */}
+          <div className="flex gap-1">
+            {stepsList.map((_, idx) => (
+              <div key={idx} className="flex-1 h-1.5 rounded-full transition-all duration-300"
+                style={{ background: idx === currentStep ? '#8B5CF6' : idx < currentStep ? 'rgba(139, 92, 246, 0.3)' : 'rgba(255,255,255,0.03)' }} />
+            ))}
+          </div>
+
+          {/* Immersive question card */}
+          <div key={currentStep} className="glass-card p-6 bg-[#141B2D] min-h-[300px] flex flex-col justify-between border border-white/5 animate-slide-in-right">
+            <div>
+              <div className="flex items-center gap-2 text-gray-400 mb-3">
+                <Calendar className="w-4 h-4" />
+                <span className="text-label font-bold">{format(new Date(), 'EEEE, MMMM d')}</span>
               </div>
-              <ResponsiveContainer width="100%" height={180}>
-                <LineChart data={moodData}>
-                  <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10 }} />
-                  <YAxis domain={[0, 10]} tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10 }} />
-                  <Tooltip contentStyle={{ background: 'rgba(15,23,42,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#e2e8f0' }}
-                    formatter={(value: any) => [`${value}/10 ${getMoodEmoji(Number(value))}`, 'Mood']} />
-                  <Line type="monotone" dataKey="mood" stroke="#6366f1" strokeWidth={2} dot={{ fill: '#6366f1', r: 3 }} />
-                </LineChart>
-              </ResponsiveContainer>
+              <h3 className="text-card-title text-white font-bold mb-4">{stepsList[currentStep].question}</h3>
+              {stepsList[currentStep].render()}
             </div>
-          )}
+
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between border-t border-white/5 pt-4 mt-6">
+              <button disabled={currentStep === 0} 
+                onClick={() => setCurrentStep((s) => Math.max(0, s - 1))}
+                className="flex items-center gap-1 text-label text-gray-400 disabled:opacity-20 active:scale-95 transition-transform font-bold">
+                <ChevronLeft className="w-4 h-4" /> Back
+              </button>
+              
+              {currentStep < stepsList.length - 1 && (
+                <button onClick={() => setCurrentStep((s) => Math.min(stepsList.length - 1, s + 1))}
+                  className="flex items-center gap-1 text-label text-[#8B5CF6] active:scale-95 transition-transform font-bold">
+                  Next <ChevronRight className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-
-        {/* Past Entries Sidebar */}
-        <div>
-          <div className="glass-card p-4 mb-4">
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-              <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800/80 border border-white/10 text-white placeholder-gray-500 text-sm"
-                placeholder="Search entries..." />
-            </div>
+      ) : (
+        /* History lists */
+        <div className="flex flex-col gap-4 animate-fade-in">
+          <div className="relative">
+            <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+              className="modal-input pl-10" placeholder="Search reflection archives..." />
+            <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-500" />
           </div>
 
-          <div className="space-y-2 max-h-[600px] overflow-y-auto">
-            {pastEntries.length === 0 ? (
-              <div className="glass-card p-6 text-center">
-                <PenLine className="w-10 h-10 mx-auto text-indigo-400/50 mb-2" />
-                <p className="text-gray-500 text-sm">No entries yet</p>
-              </div>
-            ) : (
-              pastEntries.map((entry) => (
-                <button key={entry.id} onClick={() => setViewingEntry(entry.id)}
-                  className="glass-card p-3 w-full text-left hover:bg-white/5 transition-colors">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-gray-400">{formatDate(entry.date)}</span>
-                    <span className="text-lg">{getMoodEmoji(entry.mood)}</span>
+          {pastEntries.length === 0 ? (
+            <div className="glass-card p-6 text-center bg-[#141B2D]">
+              <p className="text-secondary-text text-gray-400">No reflections match your search parameters.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {pastEntries.map((e) => (
+                <div key={e.id} className="glass-card p-4 bg-[#141B2D] border border-white/5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-label text-gray-400 font-bold">{format(parseISO(e.date + 'T00:00:00'), 'EEEE, MMMM d, yyyy')}</span>
+                    <span className="text-xl">{getMoodEmoji(e.mood)}</span>
                   </div>
-                  <p className="text-sm text-gray-300 line-clamp-2">{entry.wentWell || entry.gratefulFor || 'No entry text'}</p>
-                  {entry.tags.length > 0 && (
-                    <div className="flex gap-1 mt-2 flex-wrap">
-                      {entry.tags.slice(0, 3).map((tag) => (
-                        <span key={tag} className="text-xs px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400">{tag}</span>
+                  {e.wentWell && (
+                    <div>
+                      <p className="text-label text-gray-500">Wins</p>
+                      <p className="text-secondary-text text-white mt-0.5">{e.wentWell}</p>
+                    </div>
+                  )}
+                  {e.tomorrowPriority && (
+                    <div>
+                      <p className="text-label text-gray-500">Absolute Priority</p>
+                      <p className="text-secondary-text text-white mt-0.5">{e.tomorrowPriority}</p>
+                    </div>
+                  )}
+                  {e.tags.length > 0 && (
+                    <div className="flex gap-1.5 flex-wrap">
+                      {e.tags.map((t) => (
+                        <span key={t} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/5 text-gray-400">#{t}</span>
                       ))}
                     </div>
                   )}
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* View Entry Modal */}
-      <Modal isOpen={!!viewEntry} onClose={() => setViewingEntry(null)} title={viewEntry ? formatDate(viewEntry.date) : ''} size="lg">
-        {viewEntry && (
-          <div className="space-y-4">
-            <div className="text-center mb-4">
-              <span className="text-4xl">{getMoodEmoji(viewEntry.mood)}</span>
-              <p className="text-sm text-gray-400 mt-1">Mood: {viewEntry.mood}/10</p>
+                </div>
+              ))}
             </div>
-            {[
-              { label: '✨ What went well', text: viewEntry.wentWell },
-              { label: '🔄 To improve', text: viewEntry.toImprove },
-              { label: '💡 Learned', text: viewEntry.learned },
-              { label: '🙏 Grateful for', text: viewEntry.gratefulFor },
-              { label: '🔕 Distractions', text: viewEntry.distractions },
-              { label: '🎯 Tomorrow', text: viewEntry.tomorrowPriority },
-            ].filter((q) => q.text).map((q, i) => (
-              <div key={i}>
-                <p className="text-xs font-medium text-gray-400 mb-1">{q.label}</p>
-                <p className="text-sm text-gray-200 bg-slate-800/50 rounded-lg p-3">{q.text}</p>
-              </div>
-            ))}
-            {viewEntry.tags.length > 0 && (
-              <div className="flex gap-1 flex-wrap">
-                {viewEntry.tags.map((tag) => (
-                  <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400">{tag}</span>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
+          )}
+        </div>
+      )}
+
     </div>
   );
+}
+function parseISO(s: string): Date {
+  return new Date(s);
 }

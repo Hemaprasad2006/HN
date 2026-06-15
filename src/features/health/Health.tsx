@@ -5,8 +5,10 @@ import { useGameStore } from '@/stores/useGameStore.ts';
 import { exerciseTypes } from '@/data/constants.ts';
 import { calculateBMI, getBMICategory, getDateKey, cn } from '@/utils/helpers.ts';
 import { format, subDays } from 'date-fns';
-import { Heart, Droplets, Moon, Weight, Footprints, Dumbbell, Plus, Trash2, Activity, Minus, Scale } from 'lucide-react';
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Droplets, Moon, Weight, Footprints, Dumbbell, Trash2, Plus, Minus, Scale } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+
+type HealthTab = 'overview' | 'hydration' | 'exercise' | 'sleep';
 
 export function Health() {
   const { healthLogs, exerciseLogs, addHealthLog, updateHealthLog, addExerciseLog, deleteExerciseLog, getLogForDate, addWater } = useHealthStore();
@@ -14,14 +16,16 @@ export function Health() {
   const addXP = useGameStore((s) => s.addXP);
   const today = getDateKey();
   const todayLog = getLogForDate(today);
-  const [showExerciseForm, setShowExerciseForm] = useState(false);
 
-  // Health form state
+  const [activeTab, setActiveTab] = useState<HealthTab>('overview');
+
+  // Form states
   const [weight, setWeight] = useState(todayLog?.weight || 0);
   const [sleepHours, setSleepHours] = useState(todayLog?.sleepHours || 0);
   const [steps, setSteps] = useState(todayLog?.steps || 0);
 
-  // Exercise form
+  // Exercise Form state
+  const [showExerciseForm, setShowExerciseForm] = useState(false);
   const [exType, setExType] = useState(exerciseTypes[0]);
   const [exDuration, setExDuration] = useState(30);
   const [exIntensity, setExIntensity] = useState<'light' | 'moderate' | 'intense'>('moderate');
@@ -29,7 +33,7 @@ export function Health() {
   const [exNotes, setExNotes] = useState('');
 
   const waterIntake = todayLog?.waterIntake || 0;
-  const waterPct = Math.min(100, (waterIntake / profile.targetWater) * 100);
+  const waterPct = Math.min(100, (waterIntake / (profile.targetWater || 3000)) * 100);
   const latestWeight = healthLogs.find((l) => l.weight)?.weight || weight || 0;
   const bmi = calculateBMI(latestWeight, profile.height || 170);
   const bmiCategory = getBMICategory(bmi);
@@ -42,7 +46,7 @@ export function Health() {
     } else {
       addHealthLog({ date: today, weight: weight || undefined, sleepHours, steps: steps || undefined, waterIntake: 0 });
     }
-    addXP(10, 'health', 'Updated health log');
+    addXP(10, 'health', 'Updated health logs');
   };
 
   const handleQuickAddWater = (amount: number) => {
@@ -88,345 +92,303 @@ export function Health() {
     setExNotes('');
   };
 
-  // Chart data
-  const weightData = useMemo(() => {
-    const data: { date: string; weight: number }[] = [];
-    for (let i = 29; i >= 0; i--) {
-      const d = format(subDays(new Date(), i), 'yyyy-MM-dd');
-      const log = healthLogs.find((l) => l.date === d);
-      if (log?.weight) data.push({ date: format(new Date(d + 'T00:00:00'), 'MMM d'), weight: log.weight });
-    }
-    return data;
-  }, [healthLogs]);
-
-  const sleepData = useMemo(() => {
-    const data: { date: string; hours: number }[] = [];
-    for (let i = 13; i >= 0; i--) {
-      const d = format(subDays(new Date(), i), 'yyyy-MM-dd');
-      const log = healthLogs.find((l) => l.date === d);
-      data.push({ date: format(new Date(d + 'T00:00:00'), 'EEE'), hours: log?.sleepHours || 0 });
-    }
-    return data;
-  }, [healthLogs]);
-
-  const waterData = useMemo(() => {
+  // Water History
+  const waterHistory = useMemo(() => {
     const data: { date: string; intake: number }[] = [];
     for (let i = 13; i >= 0; i--) {
       const d = format(subDays(new Date(), i), 'yyyy-MM-dd');
       const log = healthLogs.find((l) => l.date === d);
-      data.push({ date: format(new Date(d + 'T00:00:00'), 'EEE'), intake: (log?.waterIntake || 0) / 1000 });
+      data.push({ date: format(new Date(d + 'T00:00:00'), 'dd'), intake: (log?.waterIntake || 0) / 1000 });
     }
     return data;
   }, [healthLogs]);
 
+  // Sleep History
+  const sleepHistory = useMemo(() => {
+    const data: { date: string; hours: number }[] = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = format(subDays(new Date(), i), 'yyyy-MM-dd');
+      const log = healthLogs.find((l) => l.date === d);
+      data.push({ date: format(new Date(d + 'T00:00:00'), 'dd'), hours: log?.sleepHours || 0 });
+    }
+    return data;
+  }, [healthLogs]);
+
+  const tooltipStyle = {
+    background: '#141B2D',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    borderRadius: '12px',
+    color: '#F8FAFC',
+    fontSize: '11px',
+  };
+
   return (
-    <div className="animate-fade-in space-y-4 text-slate-100">
+    <div className="animate-fade-in flex flex-col gap-6" style={{ paddingBottom: '24px' }}>
+      
       {/* Header */}
-      <div className="page-header">
-        <div>
-          <h1 className="page-title gradient-text flex items-center gap-2">
-            <Heart className="w-5 h-5 md:w-6 md:h-6 text-rose-400" /> Health Tracker
-          </h1>
-          <p className="text-responsive-xs text-gray-400 mt-0.5">Monitor your body, optimize sleep, steps and workouts</p>
-        </div>
+      <div>
+        <h1 className="text-page-title text-white font-extrabold">Health</h1>
+        <p className="text-secondary-text text-gray-400 mt-1">Track metrics, sleep patterns, and physical training</p>
       </div>
 
-      {/* Health Logger Widgets */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        
-        {/* Water Tracker Card */}
-        <div className="glass-card p-4 stat-glow-cyan flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-white flex items-center gap-1.5">
-                <Droplets className="w-4 h-4 text-cyan-400" /> Water Tracker
-              </span>
-              <span className="text-[10px] text-gray-400 font-semibold bg-cyan-500/10 px-2 py-0.5 rounded-full">
-                {waterPct.toFixed(0)}% Target
-              </span>
-            </div>
-            
-            <div className="my-2.5">
-              <p className="text-2xl font-black text-cyan-400 leading-none">{waterIntake} ml</p>
-              <p className="text-[10px] text-gray-500 mt-1">Goal: {profile.targetWater} ml</p>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="h-2 bg-slate-800 rounded-full overflow-hidden mb-4">
-              <div className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-300" style={{ width: `${waterPct}%` }} />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <button 
-              onClick={handleQuickSubtractWater} 
-              disabled={waterIntake <= 0}
-              className="px-2 py-1.5 rounded-lg bg-slate-800 text-gray-400 text-xs font-semibold hover:text-white transition-colors disabled:opacity-30">
-              -250
-            </button>
-            <button 
-              onClick={() => handleQuickAddWater(250)} 
-              className="flex-1 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/25 text-cyan-400 text-xs font-semibold hover:bg-cyan-500/20 transition-all">
-              +250ml
-            </button>
-            <button 
-              onClick={() => handleQuickAddWater(500)} 
-              className="flex-1 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 text-xs font-semibold hover:bg-cyan-500/30 transition-all">
-              +500ml
-            </button>
-          </div>
-        </div>
-
-        {/* Daily Log Card with Quick Tap updates */}
-        <div className="glass-card p-4 flex flex-col justify-between">
-          <div>
-            <h3 className="text-xs font-semibold text-white mb-3 flex items-center gap-1.5">
-              <Activity className="w-4 h-4 text-emerald-400" /> Daily Health Stats
-            </h3>
-            
-            <div className="space-y-2.5">
-              {/* Sleep log */}
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-1.5 text-gray-400">
-                  <Moon className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Sleep: <strong className="text-white">{sleepHours}h</strong></span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button onClick={() => handleQuickSleepAdd(-0.5)} className="w-5 h-5 rounded bg-white/[0.03] border border-white/5 flex items-center justify-center text-gray-400 hover:text-white text-xs">-</button>
-                  <button onClick={() => handleQuickSleepAdd(0.5)} className="w-5 h-5 rounded bg-white/[0.03] border border-white/5 flex items-center justify-center text-gray-400 hover:text-white text-xs">+</button>
-                </div>
-              </div>
-
-              {/* Steps log */}
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-1.5 text-gray-400">
-                  <Footprints className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Steps: <strong className="text-white">{steps.toLocaleString()}</strong></span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button onClick={() => handleQuickStepsAdd(-1000)} className="w-5 h-5 rounded bg-white/[0.03] border border-white/5 flex items-center justify-center text-gray-400 hover:text-white text-xs">-1k</button>
-                  <button onClick={() => handleQuickStepsAdd(1000)} className="w-5 h-5 rounded bg-white/[0.03] border border-white/5 flex items-center justify-center text-gray-400 hover:text-white text-xs">+1k</button>
-                </div>
-              </div>
-
-              {/* Weight log */}
-              <div className="flex items-center gap-2">
-                <Weight className="w-3.5 h-3.5 text-violet-400 shrink-0" />
-                <span className="text-xs text-gray-400 w-12 shrink-0">Weight:</span>
-                <input 
-                  type="number" 
-                  value={weight || ''} 
-                  onChange={(e) => setWeight(Number(e.target.value))}
-                  placeholder="kg"
-                  className="w-16 px-1.5 py-0.5 rounded bg-slate-900 border border-white/5 text-center text-xs text-white" />
-                <span className="text-[10px] text-gray-500">kg</span>
-              </div>
-            </div>
-          </div>
-
-          <button 
-            onClick={handleSaveHealth}
-            className="w-full mt-3 py-1.5 rounded-lg gradient-primary text-white text-xs font-semibold hover:opacity-90 transition-all">
-            Save Log
+      {/* Tabs Selection Bar */}
+      <div className="flex gap-1.5 p-1 rounded-2xl bg-[#141B2D] border border-white/5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+        {(['overview', 'hydration', 'exercise', 'sleep'] as HealthTab[]).map((tab) => (
+          <button key={tab} onClick={() => setActiveTab(tab)}
+            className={cn(
+              'flex-1 py-2.5 rounded-xl text-xs font-bold transition-all capitalize whitespace-nowrap px-3 text-center',
+              activeTab === tab ? 'bg-[#8B5CF6] text-white shadow-lg' : 'text-gray-400'
+            )}>
+            {tab}
           </button>
-        </div>
-
-        {/* BMI Calculator Card */}
-        <div className="glass-card p-4 flex flex-col justify-between">
-          <div>
-            <h3 className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
-              <Scale className="w-4 h-4 text-violet-400" /> BMI Calculator
-            </h3>
-            
-            {bmi > 0 ? (
-              <div className="text-center py-1.5">
-                <p className="text-3xl font-black mb-0.5" style={{ color: bmiCategory.color }}>{bmi}</p>
-                <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: bmiCategory.color }}>{bmiCategory.label}</p>
-                
-                <div className="mt-3.5 h-1.5 bg-slate-800 rounded-full overflow-hidden relative">
-                  <div className="absolute inset-y-0 left-0 w-1/4 bg-amber-500/50 rounded-l-full" />
-                  <div className="absolute inset-y-0 left-1/4 w-1/4 bg-emerald-500/50" />
-                  <div className="absolute inset-y-0 left-2/4 w-1/4 bg-orange-500/50" />
-                  <div className="absolute inset-y-0 left-3/4 w-1/4 bg-rose-500/50 rounded-r-full" />
-                  <div className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-white rounded-full shadow-lg"
-                    style={{ left: `${Math.min(95, Math.max(5, ((bmi - 15) / 25) * 100))}%` }} />
-                </div>
-                <div className="flex justify-between text-[8px] text-gray-500 mt-1">
-                  <span>Under</span><span>Normal</span><span>Over</span><span>Obese</span>
-                </div>
-              </div>
-            ) : (
-              <p className="text-gray-500 text-xs text-center py-6">Enter weight and height (settings) to see BMI</p>
-            )}
-          </div>
-
-          <p className="text-[10px] text-gray-500 text-center">BMI based on height: {profile.height || '--'}cm</p>
-        </div>
+        ))}
       </div>
 
-      {/* Workouts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        
-        {/* Workout list */}
-        <div className="lg:col-span-7 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs md:text-sm font-semibold text-gray-300 flex items-center gap-1.5">
-              <Dumbbell className="w-4 h-4 text-rose-400" /> Today's Exercise Log
-            </h3>
-            <button 
-              onClick={() => setShowExerciseForm(!showExerciseForm)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold hover:bg-rose-500/20 transition-all">
-              <Plus className="w-3.5 h-3.5" /> Log Exercise
-            </button>
+      {/* Tab Panels */}
+      {activeTab === 'overview' && (
+        <div className="flex flex-col gap-5">
+          {/* Weight & BMI Card */}
+          <div className="glass-card p-4 bg-[#141B2D] flex flex-col gap-4">
+            <div className="flex justify-between items-center">
+              <span className="text-label text-gray-400 uppercase font-bold tracking-wider flex items-center gap-1.5">
+                <Scale className="w-4 h-4 text-violet-400" /> BMI Evaluation
+              </span>
+              <span className="text-label px-2 py-0.5 rounded-full font-bold" style={{ color: bmiCategory.color, backgroundColor: `${bmiCategory.color}15` }}>
+                {bmiCategory.label}
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-label text-gray-500">Latest BMI Score</p>
+                <p className="text-card-title text-white font-black mt-1">{bmi.toFixed(1)}</p>
+              </div>
+              <div>
+                <p className="text-label text-gray-500">Current Weight</p>
+                <p className="text-card-title text-white font-black mt-1">{latestWeight > 0 ? `${latestWeight} kg` : '—'}</p>
+              </div>
+            </div>
+
+            <div className="border-t border-white/5 pt-3 flex gap-3">
+              <div className="flex-1">
+                <label className="text-label text-gray-400 block mb-1">Update Weight (kg)</label>
+                <input type="number" value={weight || ''} onChange={(e) => setWeight(Number(e.target.value))} className="modal-input" placeholder="e.g. 70" />
+              </div>
+              <button onClick={handleSaveHealth} className="btn-primary self-end py-3 text-xs">Save</button>
+            </div>
           </div>
 
-          {showExerciseForm && (
-            <div className="p-3 bg-slate-900/60 border border-white/5 rounded-xl space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[10px] text-gray-400 mb-1">Workout Type</label>
-                  <select value={exType} onChange={(e) => setExType(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-800 border border-white/10 text-white text-xs">
-                    {exerciseTypes.map((t) => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[10px] text-gray-400 mb-1">Intensity</label>
-                  <div className="flex gap-1">
-                    {(['light', 'moderate', 'intense'] as const).map((i) => (
-                      <button key={i} onClick={() => setExIntensity(i)}
-                        className={cn('flex-1 py-1.5 rounded-lg text-[10px] font-semibold transition-all capitalize',
-                          exIntensity === i ? 'gradient-primary text-white' : 'bg-slate-800 text-gray-400 hover:text-white')}>
-                        {i}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+          {/* Quick Metrics Summary */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="glass-card p-4 bg-[#141B2D] flex flex-col justify-between gap-3">
+              <span className="text-label text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                <Footprints className="w-3.5 h-3.5 text-[#22C55E]" /> Today Steps
+              </span>
+              <p className="text-card-title text-white font-black leading-none">{steps.toLocaleString()} steps</p>
+              <div className="flex gap-1">
+                <button onClick={() => handleQuickStepsAdd(1000)} className="flex-1 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-gray-300">+1k</button>
+                <button onClick={() => handleQuickStepsAdd(5000)} className="flex-1 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-gray-300">+5k</button>
               </div>
-              
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[10px] text-gray-400 mb-1">Duration (minutes)</label>
-                  <input type="number" value={exDuration} onChange={(e) => setExDuration(Number(e.target.value))}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-800 border border-white/10 text-white text-xs" min={1} />
-                </div>
-                <div>
-                  <label className="block text-[10px] text-gray-400 mb-1">Calories Burned (optional)</label>
-                  <input type="number" value={exCalories || ''} onChange={(e) => setExCalories(Number(e.target.value))}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-800 border border-white/10 text-white text-xs" placeholder="e.g. 250" />
-                </div>
-              </div>
+            </div>
 
+            <div className="glass-card p-4 bg-[#141B2D] flex flex-col justify-between gap-3">
+              <span className="text-label text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                <Moon className="w-3.5 h-3.5 text-[#F59E0B]" /> Today Sleep
+              </span>
+              <p className="text-card-title text-white font-black leading-none">{sleepHours}h rested</p>
+              <div className="flex gap-1">
+                <button onClick={() => handleQuickSleepAdd(-1)} className="flex-1 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-gray-300">-1h</button>
+                <button onClick={() => handleQuickSleepAdd(1)} className="flex-1 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-gray-300">+1h</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'hydration' && (
+        <div className="flex flex-col gap-5 animate-fade-in">
+          {/* Hydration Log Card */}
+          <div className="glass-card p-4 bg-[#141B2D] flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <span className="text-label text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                <Droplets className="w-4 h-4 text-[#22C55E]" /> Hydration Target
+              </span>
+              <span className="text-label text-[#22C55E] bg-[#22C55E]/10 px-2 py-0.5 rounded-full font-bold">
+                {waterPct.toFixed(0)}%
+              </span>
+            </div>
+
+            <div className="flex items-baseline justify-between">
               <div>
-                <label className="block text-[10px] text-gray-400 mb-1">Workout Notes</label>
-                <input type="text" value={exNotes} onChange={(e) => setExNotes(e.target.value)}
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-slate-800 border border-white/10 text-white text-xs placeholder-gray-500" placeholder="e.g. 5x5 squats, heavy set" />
+                <p className="text-display text-[#22C55E] font-black leading-none">{waterIntake}</p>
+                <p className="text-label text-gray-400 mt-1">ml consumed / {profile.targetWater || 3000}ml target</p>
               </div>
-
-              <button onClick={handleAddExercise}
-                className="w-full py-2 rounded-lg gradient-danger text-white text-xs font-semibold hover:opacity-90 transition-all">
-                Add Exercise Log
+              <button onClick={handleQuickSubtractWater} className="p-2.5 rounded-xl bg-white/5 text-gray-400 hover:text-white">
+                <Minus className="w-4 h-4" />
               </button>
             </div>
-          )}
 
-          {todayExercises.length === 0 ? (
-            <div className="glass-card p-6 text-center">
-              <Dumbbell className="w-8 h-8 mx-auto text-rose-400/40 mb-1.5" />
-              <p className="text-responsive-xs text-gray-400">No workouts recorded today. Start moving!</p>
+            <div className="h-2 rounded-full overflow-hidden bg-white/5">
+              <div className="h-full rounded-full transition-all duration-300" style={{ width: `${waterPct}%`, background: '#22C55E' }} />
             </div>
-          ) : (
-            <div className="space-y-1.5">
-              {todayExercises.map((ex) => (
-                <div key={ex.id} className="glass-card p-2.5 flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-white">{ex.type}</p>
-                    <p className="text-[10px] text-gray-500">
-                      {ex.durationMinutes}min · <span className="capitalize">{ex.intensity}</span>
-                      {ex.caloriesBurned ? ` · ${ex.caloriesBurned} cal` : ''}
-                      {ex.notes ? ` · "${ex.notes}"` : ''}
-                    </p>
-                  </div>
-                  <button onClick={() => deleteExerciseLog(ex.id)} className="p-1 rounded hover:bg-rose-500/20 text-gray-500 hover:text-rose-400 transition-colors">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+
+            <div className="flex gap-2">
+              {[250, 500, 750].map((ml) => (
+                <button key={ml} onClick={() => handleQuickAddWater(ml)} 
+                  className="flex-1 py-2.5 rounded-xl text-xs font-bold border border-[#22C55E]/20 bg-[#22C55E]/5 text-[#22C55E] transition-all active:scale-95">
+                  +{ml}ml
+                </button>
               ))}
             </div>
-          )}
-        </div>
-
-        {/* BMI reference / quick tip */}
-        <div className="lg:col-span-5">
-          <div className="glass-card p-4 h-full flex flex-col justify-between">
-            <div>
-              <h3 className="text-xs font-semibold text-white mb-2">Health Quote & Tip</h3>
-              <p className="text-responsive-xs text-gray-400 italic">
-                "It is a shame for a man to grow old without seeing the beauty and strength of which his body is capable."
-              </p>
-            </div>
-            
-            <div className="mt-4 pt-3 border-t border-white/5 text-responsive-xs text-gray-400 space-y-1.5">
-              <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                <span>Drink water consistently throughout the day to boost metabolism.</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                <span>Keep consistent sleep timings to support circadian rhythm.</span>
-              </div>
-            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Analytics Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {weightData.length > 1 && (
-          <div className="glass-card p-4">
-            <h3 className="text-xs font-semibold text-slate-300 mb-2">Weight Trend (30d)</h3>
-            <div className="h-40">
+          {/* Water History Chart */}
+          <div className="glass-card p-4 bg-[#141B2D] space-y-3">
+            <div>
+              <h4 className="text-card-title text-white font-bold">Daily Water Intake</h4>
+              <p className="text-label text-gray-500 mt-0.5">Hydration values logged (last 14 days in Liters)</p>
+            </div>
+            <div className="h-44">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={weightData}>
-                  <XAxis dataKey="date" tick={{ fill: 'rgba(148, 163, 184, 0.6)', fontSize: 9 }} axisLine={false} tickLine={false} />
-                  <YAxis domain={['dataMin - 1', 'dataMax + 1']} tick={{ fill: 'rgba(148, 163, 184, 0.6)', fontSize: 9 }} axisLine={false} tickLine={false} width={20} />
-                  <Tooltip contentStyle={{ background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 8, fontSize: 10 }} />
-                  <Line type="monotone" dataKey="weight" stroke="#8b5cf6" strokeWidth={2} dot={{ fill: '#8b5cf6', r: 2 }} />
+                <LineChart data={waterHistory} margin={{ top: 10, right: 0, bottom: 5, left: -25 }}>
+                  <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 9 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 8, fill: 'rgba(255,255,255,0.4)' }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Line type="monotone" dataKey="intake" stroke="#22C55E" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </div>
-        )}
-        
-        <div className="glass-card p-4">
-          <h3 className="text-xs font-semibold text-slate-300 mb-2">Sleep hours (14d)</h3>
-          <div className="h-40">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={sleepData}>
-                <XAxis dataKey="date" tick={{ fill: 'rgba(148, 163, 184, 0.6)', fontSize: 9 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: 'rgba(148, 163, 184, 0.6)', fontSize: 9 }} axisLine={false} tickLine={false} width={16} />
-                <Tooltip contentStyle={{ background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 8, fontSize: 10 }} />
-                <Area type="monotone" dataKey="hours" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.12} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
         </div>
+      )}
 
-        <div className="glass-card p-4">
-          <h3 className="text-xs font-semibold text-slate-300 mb-2">Water Intake (14d)</h3>
-          <div className="h-40">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={waterData}>
-                <XAxis dataKey="date" tick={{ fill: 'rgba(148, 163, 184, 0.6)', fontSize: 9 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: 'rgba(148, 163, 184, 0.6)', fontSize: 9 }} axisLine={false} tickLine={false} width={16} />
-                <Tooltip contentStyle={{ background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 8, fontSize: 10 }}
-                  formatter={(value: any) => [`${value}L`, 'Water']} />
-                <Bar dataKey="intake" fill="#06b6d4" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+      {activeTab === 'exercise' && (
+        <div className="flex flex-col gap-4 animate-fade-in">
+          {/* Add Workout Section Toggle */}
+          {!showExerciseForm ? (
+            <button onClick={() => setShowExerciseForm(true)} 
+              className="w-full glass-card p-4 flex items-center justify-between bg-gradient-to-r from-[#EF4444]/10 to-transparent border border-[#EF4444]/20 active:scale-95 transition-all">
+              <span className="text-body font-bold text-white flex items-center gap-2">
+                <Dumbbell className="w-5 h-5 text-[#EF4444]" /> Log Workout Session
+              </span>
+              <Plus className="w-5 h-5 text-gray-400" />
+            </button>
+          ) : (
+            <div className="glass-card p-4 bg-[#141B2D] flex flex-col gap-4">
+              <h4 className="text-card-title text-white font-bold">New Workout</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-label text-gray-400 block mb-1">Activity Type</label>
+                  <select value={exType} onChange={(e) => setExType(e.target.value)} className="modal-input">
+                    {exerciseTypes.map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-label text-gray-400 block mb-1">Duration (mins)</label>
+                  <input type="number" value={exDuration} onChange={(e) => setExDuration(Number(e.target.value))} className="modal-input" min={5} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-label text-gray-400 block mb-1">Intensity</label>
+                  <select value={exIntensity} onChange={(e) => setExIntensity(e.target.value as any)} className="modal-input">
+                    <option value="light">Light</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="intense">Intense</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-label text-gray-400 block mb-1">Est. Calories Burned</label>
+                  <input type="number" value={exCalories} onChange={(e) => setExCalories(Number(e.target.value))} className="modal-input" placeholder="Optional" />
+                </div>
+              </div>
+              <div>
+                <label className="text-label text-gray-400 block mb-1">Workout Notes</label>
+                <input value={exNotes} onChange={(e) => setExNotes(e.target.value)} className="modal-input" placeholder="e.g. Completed outdoor running loop" />
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setShowExerciseForm(false)} className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold text-gray-300">Cancel</button>
+                <button onClick={handleAddExercise} className="flex-1 btn-primary py-3 text-xs" style={{ background: '#EF4444' }}>Save Session</button>
+              </div>
+            </div>
+          )}
+
+          {/* Today's Exercises */}
+          <div>
+            <div className="text-label text-gray-400 uppercase tracking-wider mb-2 px-1">Today's Workouts</div>
+            {todayExercises.length === 0 ? (
+              <div className="glass-card p-4 text-center bg-[#141B2D]">
+                <p className="text-secondary-text text-gray-400">No workout sessions logged for today.</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {todayExercises.map((ex) => (
+                  <div key={ex.id} className="glass-card p-4 bg-[#141B2D] flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#EF4444]/10 text-[#EF4444] flex items-center justify-center">
+                        <Dumbbell className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-body font-bold text-white">{ex.type}</p>
+                        <p className="text-label text-gray-400">{ex.durationMinutes}m · {ex.intensity} intensity {ex.caloriesBurned ? `· ${ex.caloriesBurned} kcal` : ''}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => deleteExerciseLog(ex.id)} className="text-gray-500 hover:text-[#EF4444] transition-colors p-1">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
+
+      {activeTab === 'sleep' && (
+        <div className="flex flex-col gap-5 animate-fade-in">
+          {/* Sleep Config */}
+          <div className="glass-card p-4 bg-[#141B2D] flex flex-col gap-4">
+            <span className="text-label text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+              <Moon className="w-4 h-4 text-[#F59E0B]" /> Rest Management
+            </span>
+            <div>
+              <p className="text-label text-gray-500">Sleep logged today</p>
+              <p className="text-display text-[#F59E0B] font-black leading-none mt-1">{sleepHours} hours</p>
+            </div>
+            
+            <div>
+              <label className="text-label text-gray-400 block mb-1">Slider Entry (Hours)</label>
+              <input type="range" min={0} max={16} step={0.5} value={sleepHours} 
+                onChange={(e) => handleQuickSleepAdd(Number(e.target.value) - sleepHours)}
+                className="w-full accent-[#F59E0B]" />
+              <div className="flex justify-between text-[10px] text-gray-500 mt-1 font-bold">
+                <span>0h</span>
+                <span>8h Target</span>
+                <span>16h</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Sleep History Chart */}
+          <div className="glass-card p-4 bg-[#141B2D] space-y-3">
+            <div>
+              <h4 className="text-card-title text-white font-bold">Sleep Quality Cycles</h4>
+              <p className="text-label text-gray-500 mt-0.5">Total sleep hours per day (last 14 days)</p>
+            </div>
+            <div className="h-44">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={sleepHistory} margin={{ top: 10, right: 0, bottom: 5, left: -25 }}>
+                  <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 9 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 8, fill: 'rgba(255,255,255,0.4)' }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Line type="monotone" dataKey="hours" stroke="#F59E0B" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

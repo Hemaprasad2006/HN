@@ -4,11 +4,11 @@ import { useHabitStore } from '@/stores/useHabitStore';
 import { useStudyStore } from '@/stores/useStudyStore';
 import { useHealthStore } from '@/stores/useHealthStore';
 import {
-  ResponsiveContainer, ScatterChart, Scatter, XAxis, YAxis, Tooltip, Cell,
+  ResponsiveContainer, XAxis, YAxis, Tooltip, Cell,
   LineChart, Line, BarChart, Bar, Legend,
 } from 'recharts';
 import { subDays, format, parseISO, differenceInDays } from 'date-fns';
-import { BarChart3, TrendingUp, TrendingDown, Brain, Zap, Moon, CheckSquare } from 'lucide-react';
+import { BarChart3, TrendingUp, TrendingDown, Brain, Zap, Moon } from 'lucide-react';
 
 export function AdvancedAnalytics() {
   const tasks = usePlannerStore((s) => s.tasks);
@@ -17,19 +17,6 @@ export function AdvancedAnalytics() {
   const studySessions = useStudyStore((s) => s.sessions);
   const healthLogs = useHealthStore((s) => s.healthLogs);
   const exerciseLogs = useHealthStore((s) => s.exerciseLogs);
-
-  const correlationData = useMemo(() => {
-    const pairs: Record<string, { date: string; sleep: number; focusSum: number; focusCount: number }> = {};
-    healthLogs.forEach((l) => { pairs[l.date] = { date: l.date, sleep: l.sleepHours, focusSum: 0, focusCount: 0 }; });
-    studySessions.forEach((s) => {
-      const dateStr = format(parseISO(s.startTime), 'yyyy-MM-dd');
-      if (pairs[dateStr]) { pairs[dateStr].focusSum += s.focusRating; pairs[dateStr].focusCount += 1; }
-      else { pairs[dateStr] = { date: dateStr, sleep: 0, focusSum: s.focusRating, focusCount: 1 }; }
-    });
-    return Object.values(pairs).filter((p) => p.sleep > 0 && p.focusCount > 0)
-      .map((p) => ({ date: p.date, sleep: Number(p.sleep.toFixed(1)), focus: Number((p.focusSum / p.focusCount).toFixed(1)) }))
-      .sort((a, b) => a.date.localeCompare(b.date)).slice(-30);
-  }, [healthLogs, studySessions]);
 
   const weeklyTrends = useMemo(() => {
     const weeksData: Record<number, { week: string; studyHours: number; workouts: number; habitRate: number; count: number }> = {};
@@ -80,212 +67,167 @@ export function AdvancedAnalytics() {
     };
   }, [tasks, studySessions, habitLogs, healthLogs]);
 
-  // Story-driven insights generator
+  // Exactly 3 story-driven insights
   const storyInsights = useMemo(() => {
-    const list: { type: 'success' | 'warning' | 'info'; text: string; icon: any; color: string }[] = [];
+    const list: { title: string; text: string; icon: any; color: string }[] = [];
 
-    // Study Hour Trend Insight
-    if (momStats.deltas.studyHours > 10) {
+    // 1. Study Insight
+    if (momStats.deltas.studyHours >= 0) {
       list.push({
-        type: 'success',
-        text: `Your study dedication is soaring! You have studied ${momStats.current.studyHours.toFixed(1)}h this month—up ${momStats.deltas.studyHours}% from last month.`,
+        title: "Study Performance",
+        text: `Your study focus is up by ${momStats.deltas.studyHours}%. You log sessions best in evening intervals.`,
         icon: Brain,
-        color: '#8b5cf6',
+        color: '#8B5CF6',
       });
-    } else if (momStats.deltas.studyHours < -10) {
+    } else {
       list.push({
-        type: 'warning',
-        text: `Study momentum has slowed down by ${Math.abs(momStats.deltas.studyHours)}%. Try scheduling short 25-minute Pomodoro sessions to ease back in.`,
+        title: "Study Schedule",
+        text: `Study hours dropped by ${Math.abs(momStats.deltas.studyHours)}%. Try scheduling 20-minute focus blocks after dinner.`,
         icon: Brain,
-        color: '#f59e0b',
+        color: '#8B5CF6',
       });
     }
 
-    // Task Completion Rate Insight
-    if (momStats.current.taskRate > 80) {
+    // 2. Sleep & Rest
+    if (momStats.current.sleepAvg >= 7) {
       list.push({
-        type: 'success',
-        text: `Elite Execution! You've completed ${momStats.current.taskRate}% of your tasks this month. You're operating with high-performance discipline.`,
-        icon: CheckSquare,
-        color: '#10b981',
+        title: "Sleep Optimization",
+        text: `Great sleep consistency! Your ${momStats.current.sleepAvg.toFixed(1)}h average sleep correlates with higher task completions.`,
+        icon: Moon,
+        color: '#22C55E',
       });
-    } else if (momStats.current.taskRate < 50) {
+    } else {
       list.push({
-        type: 'warning',
-        text: `Task backlog is growing. Try focusing on just 1-2 'High Priority' items daily to avoid feeling overwhelmed.`,
-        icon: CheckSquare,
-        color: '#ef4444',
+        title: "Rest Recovery",
+        text: `Averaging ${momStats.current.sleepAvg.toFixed(1)}h sleep. Target 7.5h to optimize cognitive focus.`,
+        icon: Moon,
+        color: '#EF4444',
       });
     }
 
-    // Sleep Correlation Insight
-    const focusCorrelation = correlationData.length > 5;
-    if (focusCorrelation) {
-      const highSleepPoints = correlationData.filter((p) => p.sleep >= 7.5);
-      const highSleepFocus = highSleepPoints.length > 0 ? highSleepPoints.reduce((s, p) => s + p.focus, 0) / highSleepPoints.length : 0;
-      
-      const lowSleepPoints = correlationData.filter((p) => p.sleep < 6.5);
-      const lowSleepFocus = lowSleepPoints.length > 0 ? lowSleepPoints.reduce((s, p) => s + p.focus, 0) / lowSleepPoints.length : 0;
-
-      if (highSleepFocus > lowSleepFocus + 1 && highSleepFocus > 0) {
-        list.push({
-          type: 'success',
-          text: `Sleep correlates directly to focus. On days with 7.5h+ sleep, your focus rating averages ${highSleepFocus.toFixed(1)}/10, compared to ${lowSleepFocus.toFixed(1)}/10 when sleep is low.`,
-          icon: Moon,
-          color: '#06b6d4',
-        });
-      }
-    }
-
-    // Habit/Discipline Consistency Insight
-    if (momStats.current.habitRate > 70) {
+    // 3. Habits
+    if (momStats.current.habitRate >= 60) {
       list.push({
-        type: 'success',
-        text: `Habit consistency is strong at ${momStats.current.habitRate}%. Daily routines compound to build life-changing results.`,
+        title: "Habit Stacking",
+        text: `Discipline is strong! Your habit execution rate is at ${momStats.current.habitRate}% this month.`,
         icon: Zap,
-        color: '#f59e0b',
+        color: '#F59E0B',
       });
-    }
-
-    // Default encouragement if no triggers fired
-    if (list.length === 0) {
+    } else {
       list.push({
-        type: 'info',
-        text: "Keep tracking your daily sleep, study sessions, and habits. Within a few days, your personalized growth correlations will appear here.",
+        title: "Habit Triggers",
+        text: `Habit rate is at ${momStats.current.habitRate}%. Try stack routines right after morning checks.`,
         icon: Zap,
-        color: '#6366f1',
+        color: '#F59E0B',
       });
     }
 
-    return list;
-  }, [momStats, correlationData]);
+    return list.slice(0, 3);
+  }, [momStats]);
 
   const tooltipStyle = {
-    background: 'rgba(15,23,42,0.95)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: 12,
-    color: '#e2e8f0',
-    fontSize: 11,
-    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+    background: '#141B2D',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    borderRadius: '12px',
+    color: '#F8FAFC',
+    fontSize: '11px',
+    boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
   };
 
   return (
-    <div className="animate-fade-in space-y-5">
+    <div className="animate-fade-in flex flex-col gap-6" style={{ paddingBottom: '24px' }}>
+      
       {/* Header */}
       <div>
-        <h1 className="page-title gradient-text flex items-center gap-2">
-          <BarChart3 className="w-6 h-6 text-indigo-400" /> Insights
+        <h1 className="text-page-title text-white font-extrabold flex items-center gap-2">
+          <BarChart3 className="w-6 h-6 text-violet-400" /> Insights
         </h1>
-        <p className="text-2xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Deep analytics and performance intelligence</p>
+        <p className="text-secondary-text text-gray-400 mt-1">Growth trends and cognitive sleep-habit correlations</p>
       </div>
 
-      {/* Story-driven Insights Section */}
-      <div className="space-y-2.5">
-        <div className="section-title">Performance Engine</div>
+      {/* 3 Story-driven Insights */}
+      <div className="flex flex-col gap-3">
         {storyInsights.map((insight, idx) => (
-          <div key={idx} className="glass-card p-4 flex gap-3.5 items-start">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${insight.color}15` }}>
+          <div key={idx} className="glass-card p-4 flex gap-3.5 items-start bg-[#141B2D]">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${insight.color}10` }}>
               <insight.icon className="w-5 h-5" style={{ color: insight.color }} />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold leading-relaxed" style={{ color: 'var(--text-primary)' }}>{insight.text}</p>
+              <h4 className="text-card-title text-white font-bold leading-tight">{insight.title}</h4>
+              <p className="text-secondary-text text-gray-400 mt-1 leading-relaxed">{insight.text}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Monthly Performance Indicators Grid */}
+      {/* MoM Performance Cards */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { label: 'Study Hours', value: `${momStats.current.studyHours.toFixed(1)}h`, prev: `${momStats.previous.studyHours.toFixed(1)}h`, delta: momStats.deltas.studyHours, glow: 'stat-glow-violet' },
-          { label: 'Task Rate', value: `${momStats.current.taskRate}%`, prev: `${momStats.previous.taskRate}%`, delta: momStats.deltas.taskRate, glow: 'stat-glow-indigo' },
-          { label: 'Habit Rate', value: `${momStats.current.habitRate}%`, prev: `${momStats.previous.habitRate}%`, delta: momStats.deltas.habitRate, glow: 'stat-glow-amber' },
-          { label: 'Avg Sleep', value: `${momStats.current.sleepAvg.toFixed(1)}h`, prev: `${momStats.previous.sleepAvg.toFixed(1)}h`, delta: momStats.deltas.sleepAvg, glow: 'stat-glow-emerald' },
+          { label: 'Study Hours', value: `${momStats.current.studyHours.toFixed(1)}h`, delta: momStats.deltas.studyHours },
+          { label: 'Task Rate', value: `${momStats.current.taskRate}%`, delta: momStats.deltas.taskRate },
+          { label: 'Habit Rate', value: `${momStats.current.habitRate}%`, delta: momStats.deltas.habitRate },
+          { label: 'Avg Sleep', value: `${momStats.current.sleepAvg.toFixed(1)}h`, delta: momStats.deltas.sleepAvg },
         ].map((card, i) => (
-          <div key={i} className={`glass-card p-3.5 space-y-1.5 ${card.glow}`}>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{card.label}</p>
-            <div className="flex items-baseline justify-between">
-              <h3 className="text-lg font-black" style={{ color: 'var(--text-primary)', fontFamily: 'JetBrains Mono, monospace' }}>{card.value}</h3>
-              <span className={`text-[10px] font-bold flex items-center gap-0.5 ${ card.delta >= 0 ? 'text-emerald-400' : 'text-rose-400' }`}>
-                {card.delta >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+          <div key={i} className="glass-card p-4 bg-[#141B2D]">
+            <p className="text-label text-gray-500 font-bold uppercase tracking-wider">{card.label}</p>
+            <div className="flex items-baseline justify-between mt-1">
+              <h3 className="text-card-title text-white font-black" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{card.value}</h3>
+              <span className={`text-label font-bold flex items-center gap-0.5 ${ card.delta >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]' }`}>
+                {card.delta >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
                 {card.delta >= 0 ? '+' : ''}{card.delta}%
               </span>
             </div>
-            <p className="text-[9px]" style={{ color: 'var(--text-muted)' }}>vs {card.prev} last month</p>
           </div>
         ))}
       </div>
 
-      {/* Charts */}
-      <div className="space-y-4">
-        {/* Sleep vs Focus Scatter Chart */}
-        <div className="glass-card p-4 space-y-3">
+      {/* Exactly 2 clean charts */}
+      <div className="flex flex-col gap-4">
+        
+        {/* Chart 1: Study vs Workouts */}
+        <div className="glass-card p-4 space-y-3 bg-[#141B2D]">
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Sleep vs Study Focus</h3>
-            <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Comparison of sleep duration against session focus rating (1-10)</p>
-          </div>
-          <div className="h-48">
-            {correlationData.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-xs text-gray-500 italic text-center px-4">
-                Log both sleep hours and study sessions to unlock correlation data.
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart margin={{ top: 10, right: 10, bottom: 5, left: -25 }}>
-                  <XAxis type="number" dataKey="sleep" name="Sleep" unit="h" domain={[4, 12]} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 9 }} axisLine={false} tickLine={false} />
-                  <YAxis type="number" dataKey="focus" name="Focus" domain={[1, 10]} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 9 }} axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={tooltipStyle} />
-                  <Scatter name="Correlation" data={correlationData}>
-                    {correlationData.map((_, index) => (<Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#6366f1' : '#8b5cf6'} />))}
-                  </Scatter>
-                </ScatterChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </div>
-
-        {/* Weekly Study Hours vs Workouts Bar Chart */}
-        <div className="glass-card p-4 space-y-3">
-          <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Study vs Workouts</h3>
-            <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Weekly breakdown of study hours and exercise workouts (last 8 weeks)</p>
+            <h4 className="text-card-title text-white font-bold">Study & Workouts</h4>
+            <p className="text-label text-gray-500 mt-0.5">Weekly breakdown (last 8 weeks)</p>
           </div>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weeklyTrends} margin={{ top: 10, right: -5, bottom: 5, left: -25 }}>
+              <BarChart data={weeklyTrends} margin={{ top: 10, right: 0, bottom: 5, left: -25 }}>
                 <XAxis dataKey="week" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 9 }} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="left" orientation="left" stroke="#8b5cf6" tick={{ fontSize: 8, fill: 'rgba(255,255,255,0.4)' }} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="right" orientation="right" stroke="#ef4444" tick={{ fontSize: 8, fill: 'rgba(255,255,255,0.4)' }} axisLine={false} tickLine={false} />
+                <YAxis yAxisId="left" stroke="#8B5CF6" tick={{ fontSize: 8, fill: 'rgba(255,255,255,0.4)' }} axisLine={false} tickLine={false} />
+                <YAxis yAxisId="right" orientation="right" stroke="#EF4444" tick={{ fontSize: 8, fill: 'rgba(255,255,255,0.4)' }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Legend wrapperStyle={{ fontSize: 9, paddingTop: 10 }} />
-                <Bar yAxisId="left" dataKey="studyHours" name="Study (h)" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-                <Bar yAxisId="right" dataKey="workouts" name="Workouts" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                <Legend wrapperStyle={{ fontSize: 9 }} />
+                <Bar yAxisId="left" dataKey="studyHours" name="Study" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
+                <Bar yAxisId="right" dataKey="workouts" name="Workouts" fill="#EF4444" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Weekly Habit Success Rate vs Study Hours Line Chart */}
-        <div className="glass-card p-4 space-y-3">
+        {/* Chart 2: Habits vs Study */}
+        <div className="glass-card p-4 space-y-3 bg-[#141B2D]">
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Habits vs Study Hours</h3>
-            <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Weekly comparison of habit completion rate against total study hours</p>
+            <h4 className="text-card-title text-white font-bold">Habits vs Study Hours</h4>
+            <p className="text-label text-gray-500 mt-0.5">Weekly compliance trend (last 8 weeks)</p>
           </div>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={weeklyTrends} margin={{ top: 10, right: -5, bottom: 5, left: -25 }}>
+              <LineChart data={weeklyTrends} margin={{ top: 10, right: 0, bottom: 5, left: -25 }}>
                 <XAxis dataKey="week" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 9 }} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="left" stroke="#f59e0b" tick={{ fontSize: 8, fill: 'rgba(255,255,255,0.4)' }} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="right" orientation="right" stroke="#8b5cf6" tick={{ fontSize: 8, fill: 'rgba(255,255,255,0.4)' }} axisLine={false} tickLine={false} />
+                <YAxis yAxisId="left" stroke="#F59E0B" tick={{ fontSize: 8, fill: 'rgba(255,255,255,0.4)' }} axisLine={false} tickLine={false} />
+                <YAxis yAxisId="right" orientation="right" stroke="#8B5CF6" tick={{ fontSize: 8, fill: 'rgba(255,255,255,0.4)' }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Legend wrapperStyle={{ fontSize: 9, paddingTop: 10 }} />
-                <Line yAxisId="left" type="monotone" dataKey="habitRate" name="Habits (%)" stroke="#f59e0b" strokeWidth={2.5} dot={{ stroke: '#f59e0b', strokeWidth: 1.5 }} activeDot={{ r: 5 }} />
-                <Line yAxisId="right" type="monotone" dataKey="studyHours" name="Study (h)" stroke="#8b5cf6" strokeWidth={2.5} dot={{ stroke: '#8b5cf6', strokeWidth: 1.5 }} />
+                <Legend wrapperStyle={{ fontSize: 9 }} />
+                <Line yAxisId="left" type="monotone" dataKey="habitRate" name="Habit %" stroke="#F59E0B" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+                <Line yAxisId="right" type="monotone" dataKey="studyHours" name="Study (h)" stroke="#8B5CF6" strokeWidth={2.5} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
+
       </div>
+
     </div>
   );
 }
