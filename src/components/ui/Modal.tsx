@@ -51,21 +51,20 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
         className={cn(
           'relative w-full animate-scale-in',
           sizeClasses[size],
-          'rounded-2xl border border-white/10 dark:border-white/10 border-gray-200',
-          'bg-slate-900/95 dark:bg-slate-900/95 bg-white',
+          'rounded-2xl modal-panel',
           'backdrop-blur-xl shadow-2xl',
           'max-h-[90vh] overflow-y-auto'
         )}
       >
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between border-b border-white/10 dark:border-white/10 border-gray-200 px-6 py-4">
-            <h2 className="text-lg font-semibold text-gray-100 dark:text-gray-100 text-gray-900">
+          <div className="flex items-center justify-between modal-panel-header px-6 py-4">
+            <h2 className="text-base font-semibold modal-panel-title">
               {title}
             </h2>
             <button
               onClick={onClose}
-              className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-white/10 hover:text-gray-200"
+              className="rounded-lg p-1.5 modal-close-btn transition-colors"
             >
               <X size={18} />
             </button>

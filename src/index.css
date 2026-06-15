@@ -543,12 +543,9 @@ html.light {
 .light .text-slate-500      { color: #64748b !important; }
 
 /* Slate backgrounds → light surface */
-.light .bg-slate-800,
-.light .bg-slate-800\/80   { background-color: rgba(241, 245, 249, 0.9) !important; }
-.light .bg-slate-900,
-.light .bg-slate-900\/95   { background-color: #ffffff !important; }
-.light .bg-slate-950,
-.light .bg-slate-950\/40   { background-color: rgba(226, 232, 240, 0.6) !important; }
+.light .bg-slate-800       { background-color: rgba(241, 245, 249, 0.9) !important; }
+.light .bg-slate-900       { background-color: #ffffff !important; }
+.light .bg-slate-950       { background-color: rgba(226, 232, 240, 0.6) !important; }
 
 /* input element override */
 .light select,
@@ -564,23 +561,6 @@ html.light {
   color: #0f172a !important;
 }
 
-/* white/opacity overlays → visible on light bg */
-.light .bg-white\/\[0\.02\],
-.light .bg-white\/\[0\.03\],
-.light .bg-white\/\[0\.04\],
-.light .bg-white\/\[0\.06\] { background-color: rgba(0,0,0,0.03) !important; }
-
-.light .bg-white\/\[0\.04\]:hover { background-color: rgba(0,0,0,0.05) !important; }
-
-/* Border overrides */
-.light .border-white\/10,
-.light .border-white\/\[0\.05\],
-.light .border-white\/\[0\.06\],
-.light .border-white\/\[0\.08\] { border-color: rgba(0, 0, 0, 0.1) !important; }
-
-/* Chat bubbles in AI Coach */
-.light .bg-white\/\[0\.04\] { background-color: rgba(0,0,0,0.04) !important; }
-
 /* Sidebar / nav background */
 .light nav,
 .light aside { background-color: rgba(255,255,255,0.85) !important; }
@@ -588,13 +568,34 @@ html.light {
 /* Header bar */
 .light header { background-color: rgba(255,255,255,0.85) !important; border-bottom-color: rgba(0,0,0,0.08) !important; }
 
-/* Modal backdrop content */
+/* Modal overlay */
 .light .modal-overlay { background: rgba(0,0,0,0.4); }
 
-/* Glass card inner content text — cascade fix */
-.light .glass-card *:not([class*="text-indigo"]):not([class*="text-emerald"]):not([class*="text-violet"]):not([class*="text-amber"]):not([class*="text-rose"]):not([class*="text-cyan"]):not([class*="gradient-text"]):not(svg):not(path) {
-  color: inherit;
+/* Modal panel base (dark mode default) */
+.modal-panel {
+  background: rgba(15, 23, 42, 0.97);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #f1f5f9;
 }
+.modal-panel-header {
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.modal-panel-title { color: #f1f5f9; }
+.modal-close-btn { color: #64748b; }
+.modal-close-btn:hover { background: rgba(255,255,255,0.08); color: #e2e8f0; }
+
+/* Modal panel light mode */
+.light .modal-panel {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.1);
+  color: #0f172a;
+}
+.light .modal-panel-header {
+  border-bottom-color: rgba(0,0,0,0.08);
+}
+.light .modal-panel-title { color: #0f172a; }
+.light .modal-close-btn { color: #94a3b8; }
+.light .modal-close-btn:hover { background: rgba(0,0,0,0.06); color: #334155; }
 
 /* Recharts tooltip on light */
 .light .recharts-tooltip-wrapper .recharts-default-tooltip {
@@ -613,3 +614,331 @@ html.light ::-webkit-scrollbar-thumb {
   body { -webkit-overflow-scrolling: touch; }
 }
 
+/* ─────────────────────────────────────────────────────────────────────
+   STUDY PAGE — Semantic design tokens (work in dark + light mode)
+───────────────────────────────────────────────────────────────────── */
+
+/* Subtitle under page title */
+.study-subtitle {
+  font-size: 10px;
+  line-height: 1.4;
+  color: #64748b;
+  margin-top: 2px;
+}
+.light .study-subtitle { color: #475569; }
+
+/* Section headings inside page */
+.study-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(148, 163, 184, 0.85);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+@media (min-width: 768px) {
+  .study-section-title { font-size: 13px; }
+}
+.light .study-section-title { color: #334155; }
+
+/* Stat card values */
+.study-stat-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: #f1f5f9;
+  line-height: 1.1;
+}
+@media (min-width: 768px) {
+  .study-stat-value { font-size: 20px; }
+}
+.light .study-stat-value { color: #0f172a; }
+
+/* Stat card labels */
+.study-stat-label {
+  font-size: 9px;
+  line-height: 1.3;
+  color: #64748b;
+  margin-top: 2px;
+}
+@media (min-width: 768px) {
+  .study-stat-label { font-size: 10px; }
+}
+.light .study-stat-label { color: #475569; }
+
+/* Subject name in card */
+.study-subject-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+@media (min-width: 768px) {
+  .study-subject-name { font-size: 13px; }
+}
+.light .study-subject-name { color: #0f172a; }
+
+/* Notes / italic line */
+.study-note {
+  font-size: 10px;
+  line-height: 1.4;
+  color: #64748b;
+  font-style: italic;
+}
+.light .study-note { color: #475569; }
+
+/* Progress bar label text */
+.study-progress-label {
+  font-size: 10px;
+  line-height: 1.4;
+  color: #94a3b8;
+}
+.light .study-progress-label { color: #475569; }
+
+/* Progress bar track */
+.study-progress-track { background: rgba(30, 41, 59, 0.6); }
+.light .study-progress-track { background: rgba(0,0,0,0.08); }
+
+/* Empty state text */
+.study-empty-text {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #64748b;
+}
+.light .study-empty-text { color: #475569; }
+
+/* Chapter control buttons */
+.study-ctrl-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+.study-ctrl-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.study-ctrl-dec {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.06);
+  color: #94a3b8;
+}
+.study-ctrl-dec:hover:not(:disabled) { background: rgba(255,255,255,0.1); color: #e2e8f0; }
+.light .study-ctrl-dec {
+  background: rgba(0,0,0,0.05);
+  border-color: rgba(0,0,0,0.1);
+  color: #475569;
+}
+.light .study-ctrl-dec:hover:not(:disabled) { background: rgba(0,0,0,0.1); color: #0f172a; }
+
+.study-ctrl-inc {
+  background: rgba(99,102,241,0.1);
+  border-color: rgba(99,102,241,0.25);
+  color: #818cf8;
+}
+.study-ctrl-inc:hover:not(:disabled) { background: rgba(99,102,241,0.2); color: #a5b4fc; }
+.light .study-ctrl-inc {
+  background: rgba(99,102,241,0.12);
+  border-color: rgba(99,102,241,0.3);
+  color: #4f46e5;
+}
+
+/* Link-style edit button */
+.study-link-btn {
+  font-size: 10px;
+  color: #818cf8;
+  transition: color 0.15s;
+}
+.study-link-btn:hover { color: #a5b4fc; text-decoration: underline; }
+.light .study-link-btn { color: #4f46e5; }
+.light .study-link-btn:hover { color: #3730a3; }
+
+/* Delete icon button */
+.study-delete-btn {
+  color: #64748b;
+  padding: 3px;
+  border-radius: 6px;
+  transition: color 0.15s;
+}
+.study-delete-btn:hover { color: #f87171; }
+.light .study-delete-btn { color: #94a3b8; }
+.light .study-delete-btn:hover { color: #dc2626; }
+
+/* Timer widget */
+.study-timer-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(2, 6, 23, 0.7);
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.light .study-timer-display {
+  background: rgba(0,0,0,0.04);
+  border-color: rgba(0,0,0,0.08);
+}
+
+.study-timer-label {
+  display: block;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+.light .study-timer-label { color: #475569; }
+
+.study-timer-value {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  color: #818cf8;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.light .study-timer-value { color: #4f46e5; }
+
+.study-timer-btn {
+  padding: 7px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s;
+  font-size: 11px;
+  font-weight: 600;
+}
+.study-timer-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.study-timer-play  { background: #4f46e5; color: #fff; }
+.study-timer-play:not(:disabled):hover  { background: #6366f1; }
+.study-timer-pause { background: #d97706; color: #fff; }
+.study-timer-pause:hover { background: #f59e0b; }
+.study-timer-reset { background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.06); }
+.study-timer-reset:not(:disabled):hover { background: rgba(255,255,255,0.1); color: #e2e8f0; }
+.light .study-timer-reset { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); color: #475569; }
+.light .study-timer-reset:not(:disabled):hover { background: rgba(0,0,0,0.1); color: #0f172a; }
+.study-timer-log   { background: #059669; color: #fff; padding: 7px 10px; }
+.study-timer-log:not(:disabled):hover { background: #10b981; }
+
+/* Session list */
+.study-session-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #e2e8f0;
+  line-height: 1.3;
+}
+.light .study-session-name { color: #0f172a; }
+
+.study-session-meta {
+  font-size: 10px;
+  color: #64748b;
+  line-height: 1.3;
+}
+.light .study-session-meta { color: #475569; }
+
+.study-focus-badge {
+  font-size: 10px;
+  color: #818cf8;
+  font-weight: 600;
+  background: rgba(99,102,241,0.12);
+  padding: 1px 6px;
+  border-radius: 99px;
+}
+.light .study-focus-badge {
+  color: #4f46e5;
+  background: rgba(99,102,241,0.1);
+}
+
+/* Header action buttons */
+.study-btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  transition: all 0.2s;
+}
+.study-btn-primary:hover { opacity: 0.9; transform: scale(1.03); }
+
+.study-btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  background: rgba(30,41,59,0.6);
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: all 0.2s;
+}
+.study-btn-secondary:hover { background: rgba(30,41,59,0.8); color: #e2e8f0; }
+.light .study-btn-secondary {
+  color: #334155;
+  background: rgba(0,0,0,0.05);
+  border-color: rgba(0,0,0,0.1);
+}
+.light .study-btn-secondary:hover { background: rgba(0,0,0,0.1); color: #0f172a; }
+
+/* Form inputs/selects in modals */
+.modal-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+.light .modal-label { color: #334155; }
+
+.modal-input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  background: rgba(15,23,42,0.8);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #f1f5f9;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.modal-input:focus { border-color: rgba(99,102,241,0.5); }
+.modal-input::placeholder { color: #475569; }
+.light .modal-input {
+  background: rgba(255,255,255,0.9);
+  border-color: rgba(0,0,0,0.12);
+  color: #0f172a;
+}
+.light .modal-input::placeholder { color: #94a3b8; }
+.light .modal-input:focus { border-color: rgba(99,102,241,0.4); }
+
+/* Form inputs in the timer widget */
+.study-select,
+.study-input {
+  width: 100%;
+  padding: 5px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  background: rgba(15,23,42,0.8);
+  border: 1px solid rgba(255,255,255,0.07);
+  color: #e2e8f0;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.study-select:focus,
+.study-input:focus { border-color: rgba(99,102,241,0.4); }
+.study-input::placeholder { color: #475569; font-size: 10px; }
+.light .study-select,
+.light .study-input {
+  background: rgba(255,255,255,0.85);
+  border-color: rgba(0,0,0,0.12);
+  color: #0f172a;
+}
+.light .study-input::placeholder { color: #94a3b8; }
