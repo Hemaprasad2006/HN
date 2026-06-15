@@ -6,6 +6,10 @@ import { subDays, parseISO, startOfDay, format } from 'date-fns';
 
 interface FocusState {
   sessions: FocusSession[];
+  isFocusRunning: boolean;
+  setIsFocusRunning: (val: boolean) => void;
+  focusTaskName: string;
+  setFocusTaskName: (name: string) => void;
   addSession: (session: Omit<FocusSession, 'id' | 'createdAt'>) => void;
   updateSession: (id: string, updates: Partial<FocusSession>) => void;
   getTodayFocusMinutes: () => number;
@@ -17,6 +21,10 @@ export const useFocusStore = create<FocusState>()(
   persist(
     (set, get) => ({
       sessions: [],
+      isFocusRunning: false,
+      setIsFocusRunning: (val) => set({ isFocusRunning: val }),
+      focusTaskName: 'Deep Work',
+      setFocusTaskName: (name) => set({ focusTaskName: name }),
       addSession: (session) =>
         set((s) => ({
           sessions: [

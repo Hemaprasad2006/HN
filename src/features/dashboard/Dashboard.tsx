@@ -3,13 +3,10 @@ import { useNavigate } from 'react-router';
 import { format } from 'date-fns';
 import { useSettingsStore } from '@/stores/useSettingsStore.ts';
 import { usePlannerStore } from '@/stores/usePlannerStore.ts';
-import { useHabitStore } from '@/stores/useHabitStore.ts';
 import { useStudyStore } from '@/stores/useStudyStore.ts';
-import { useHealthStore } from '@/stores/useHealthStore.ts';
 import { useGameStore } from '@/stores/useGameStore.ts';
-import { useFocusStore } from '@/stores/useFocusStore.ts';
-import { getGreeting, getDateKey, formatDuration, percentage, cn } from '@/utils/helpers.ts';
-import { CheckCircle2, Circle, Play, Sparkles, Flame, CheckSquare, Target } from 'lucide-react';
+import { getGreeting, getDateKey } from '@/utils/helpers.ts';
+import { Circle, CheckCircle2, Sparkles, BookOpen } from 'lucide-react';
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -19,202 +16,151 @@ export function Dashboard() {
   const profile = useSettingsStore((s) => s.profile);
   const tasks = usePlannerStore((s) => s.tasks);
   const toggleTask = usePlannerStore((s) => s.toggleTask);
-  const habits = useHabitStore((s) => s.habits);
-  const getLogsForDate = useHabitStore((s) => s.getLogsForDate);
-  const getTotalHours = useStudyStore((s) => s.getTotalHours);
-  const healthLogs = useHealthStore((s) => s.healthLogs);
-  const totalXP = useGameStore((s) => s.totalXP);
-  const getTodayFocusMinutes = useFocusStore((s) => s.getTodayFocusMinutes);
+  const addXP = useGameStore((s) => s.addXP);
+
+  const subjects = useStudyStore((s) => s.subjects);
+  const studySessions = useStudyStore((s) => s.sessions);
 
   const todayTasks = useMemo(() => tasks.filter((t) => t.dueDate === todayKey), [tasks, todayKey]);
-  const completedTasks = todayTasks.filter((t) => t.status === 'done').length;
-  const todayHabitLogs = useMemo(() => getLogsForDate(todayKey), [getLogsForDate, todayKey]);
-  const completedHabits = todayHabitLogs.filter((l) => l.completed).length;
-  const weekStudyHours = useMemo(() => getTotalHours(7), [getTotalHours]);
-  const todayFocusMin = useMemo(() => getTodayFocusMinutes(), [getTodayFocusMinutes]);
-  const todayHealth = healthLogs.find((l) => l.date === todayKey);
-  const waterIntake = todayHealth?.waterIntake || 0;
-  const waterPct = Math.min(100, Math.round((waterIntake / (profile.targetWater || 3000)) * 100));
 
-  const lifeScore = useMemo(() => {
-    const taskScore = todayTasks.length > 0 ? (completedTasks / todayTasks.length) * 25 : 25;
-    const habitScore = habits.length > 0 ? (completedHabits / habits.length) * 25 : 25;
-    const waterScore = waterPct * 0.25;
-    const focusScore = Math.min(25, (todayFocusMin / 120) * 25);
-    return Math.round(taskScore + habitScore + waterScore + focusScore);
-  }, [completedTasks, todayTasks.length, completedHabits, habits.length, waterPct, todayFocusMin]);
+  // Today's Mission (One sentence summary)
+  const todayMissionText = useMemo(() => {
+    const uncompleted = todayTasks.filter((t) => t.status !== 'done');
+    if (uncompleted.length === 0) {
+      return "All core priorities completed! Take time to reflect and rest.";
+    }
+    const mainTask = uncompleted.find((t) => t.priority === 'high') || uncompleted[0];
+    const secondTask = uncompleted.find((t) => t.id !== mainTask.id) || null;
 
-  const greeting = getGreeting();
+    if (secondTask) {
+      return `Complete ${mainTask.title.toLowerCase()} and focus on ${secondTask.title.toLowerCase()} today.`;
+    }
+    return `Focus on completing ${mainTask.title.toLowerCase()} to secure your progress today.`;
+  }, [todayTasks]);
 
-  // Top 3 tasks
+  // Strict limit: 3 Things That Matter Today
   const top3Tasks = useMemo(() => {
     return [...todayTasks]
+      .filter((t) => t.status !== 'done')
       .sort((a, b) => {
-        if (a.status === 'done' && b.status !== 'done') return 1;
-        if (a.status !== 'done' && b.status === 'done') return -1;
         const pOrder = { high: 0, medium: 1, low: 2 };
         return pOrder[a.priority] - pOrder[b.priority];
       })
       .slice(0, 3);
   }, [todayTasks]);
 
-  // Today's main mission
-  const mainMission = useMemo(() => {
-    return todayTasks.find((t) => t.status !== 'done' && t.priority === 'high') || 
-           todayTasks.find((t) => t.status !== 'done') || 
-           null;
-  }, [todayTasks]);
+  // Continue Where You Left Off logic (last study session or subject)
+  const lastStudyContext = useMemo(() => {
+    if (studySessions.length > 0) {
+      const sorted = [...studySessions].sort((a, b) => b.startTime.localeCompare(a.startTime));
+      const lastSession = sorted[0];
+      const subject = subjects.find((s) => s.id === lastSession.subjectId);
+      if (subject) {
+        return {
+          title: subject.name,
+          subtitle: lastSession.topic ? `Topic: ${lastSession.topic}` : 'Deep study session',
+          desc: 'Continue learning block',
+        };
+      }
+    }
+    if (subjects.length > 0) {
+      return {
+        title: subjects[0].name,
+        subtitle: 'Log your next study block',
+        desc: 'Begin study sequence',
+      };
+    }
+    return {
+      title: 'Deep Work Session',
+      subtitle: 'Activate Pomodoro timer',
+      desc: 'Start new block',
+    };
+  }, [studySessions, subjects]);
 
-  const radius = 42;
-  const circ = 2 * Math.PI * radius;
-  const dashOffset = circ - (lifeScore / 100) * circ;
+  const greeting = getGreeting();
+
+  const handleToggle = (id: string, title: string) => {
+    toggleTask(id);
+    addXP(15, 'task', `Completed task: ${title}`);
+  };
 
   return (
-    <div className="animate-fade-in flex flex-col gap-6" style={{ paddingBottom: '24px' }}>
+    <div className="animate-fade-in flex flex-col gap-8 select-none max-w-md mx-auto pt-6">
       
-      {/* 1. Greeting Section */}
-      <div className="flex items-center justify-between mt-4">
-        <div>
-          <p className="text-label text-gray-400 uppercase tracking-wider">{format(today, 'EEEE, MMM d')}</p>
-          <h1 className="text-page-title text-white font-extrabold mt-1">{greeting}, {profile.name?.split(' ')[0] || 'Hemaprasad'}</h1>
-        </div>
-        <div className="relative w-16 h-16 shrink-0 flex items-center justify-center">
-          <svg width="60" height="60" viewBox="0 0 100 100" className="transform -rotate-90">
-            <circle cx="50" cy="50" r={radius} fill="none" stroke="rgba(255, 255, 255, 0.03)" strokeWidth="8" />
-            <circle cx="50" cy="50" r={radius} fill="none" stroke="#8B5CF6" strokeWidth="8" strokeLinecap="round"
-              strokeDasharray={circ} strokeDashoffset={dashOffset} className="transition-all duration-500" />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-label font-black text-white leading-none">{lifeScore}</span>
-            <span style={{ fontSize: '7px' }} className="text-gray-400 font-bold mt-0.5">SCORE</span>
-          </div>
-        </div>
+      {/* 1. Greeting */}
+      <div>
+        <p className="text-label text-gray-500 uppercase tracking-widest">{format(today, 'EEEE, MMMM d')}</p>
+        <h1 className="text-page-title text-white font-extrabold mt-1">{greeting}, {profile.name || 'Hemaprasad'}</h1>
       </div>
 
-      {/* 2. Today's Mission Card */}
-      {mainMission ? (
-        <div className="glass-card p-4 flex flex-col gap-4 border border-[#8B5CF6]/20 bg-gradient-to-br from-[#141B2D] to-[#1E293B]">
-          <div className="flex items-center justify-between">
-            <span className="text-label text-[#8B5CF6] font-bold uppercase tracking-wider flex items-center gap-1.5">
-              <Target className="w-3.5 h-3.5" /> Primary Mission
-            </span>
-            <span className="text-label text-gray-400 bg-white/5 px-2 py-0.5 rounded-full font-bold">
-              {mainMission.priority}
-            </span>
-          </div>
-          <div>
-            <h3 className="text-card-title text-white font-bold">{mainMission.title}</h3>
-            {mainMission.description && (
-              <p className="text-secondary-text text-gray-400 mt-1 line-clamp-1">{mainMission.description}</p>
-            )}
-          </div>
-          <div className="flex items-center justify-between text-label">
-            <span className="text-gray-400">Time estimate: {formatDuration(mainMission.estimatedMinutes)}</span>
-            <button onClick={() => toggleTask(mainMission.id)} className="text-[#8B5CF6] font-bold active:scale-95 transition-transform">
-              Complete Mission →
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="glass-card p-6 text-center bg-[#141B2D]">
-          <span className="text-2xl">🏆</span>
-          <h3 className="text-card-title text-white font-bold mt-2">All Clear!</h3>
-          <p className="text-secondary-text text-gray-400 mt-1">No pending primary missions. Add a task to begin.</p>
-        </div>
-      )}
+      {/* 2. Today's Mission (One sentence) */}
+      <div className="py-2">
+        <p className="text-label text-gray-500 uppercase tracking-widest mb-1.5 font-bold">Today's Mission</p>
+        <p className="text-section-title text-white font-bold leading-snug">{todayMissionText}</p>
+      </div>
 
-      {/* 3. Top 3 Tasks */}
-      <div>
-        <div className="text-label text-gray-400 uppercase tracking-wider mb-3 px-1 flex justify-between items-center">
-          <span>Focus Checklist</span>
-          {todayTasks.length > 3 && (
-            <button onClick={() => navigate('/planner')} className="text-[#8B5CF6] font-bold normal-case">
-              See all ({todayTasks.length})
-            </button>
-          )}
+      {/* 3. Three Things That Matter Today */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center px-1">
+          <p className="text-label text-gray-500 uppercase tracking-widest font-bold">Daily Focus Priorities</p>
+          <span className="text-label text-violet-400 font-bold">Only 3</span>
         </div>
-        
+
         {top3Tasks.length === 0 ? (
-          <div className="glass-card p-4 text-center bg-[#141B2D]">
-            <p className="text-secondary-text text-gray-400">Checklist is empty. Add tasks to start today's timeline.</p>
+          <div className="p-6 rounded-[20px] bg-[#121826] border border-white/5 text-center">
+            <p className="text-body text-gray-400">Your core priorities are checked off. Enjoy the breathing room.</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-2">
-            {top3Tasks.map((task) => {
-              const done = task.status === 'done';
-              return (
-                <button key={task.id} onClick={() => toggleTask(task.id)}
-                  className={cn(
-                    'w-full glass-card p-4 flex items-center gap-3 text-left transition-all active:scale-[0.99]',
-                    task.priority === 'high' ? 'border-l-2 border-l-[#EF4444]' : 
-                    task.priority === 'medium' ? 'border-l-2 border-l-[#F59E0B]' : 'border-l-2 border-l-[#22C55E]'
-                  )}>
-                  <div className="shrink-0 transition-transform active:scale-90">
-                    {done ? (
-                      <CheckCircle2 className="w-5 h-5 text-[#22C55E] animate-check" />
-                    ) : (
-                      <Circle className="w-5 h-5 text-gray-500 hover:text-[#8B5CF6]" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={cn('text-body font-semibold truncate', done && 'line-through text-gray-500')}>{task.title}</p>
-                    {task.estimatedMinutes > 0 && !done && (
-                      <p className="text-label text-gray-400 mt-0.5">{formatDuration(task.estimatedMinutes)}</p>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
+          <div className="flex flex-col gap-3">
+            {top3Tasks.map((task) => (
+              <button key={task.id} onClick={() => handleToggle(task.id, task.title)}
+                className="w-full p-4 rounded-[20px] bg-[#121826] border border-white/5 flex items-start gap-4 text-left active:scale-[0.99] transition-all">
+                <div className="shrink-0 mt-0.5">
+                  <Circle className="w-5 h-5 text-gray-500 hover:text-violet-400 transition-colors" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-body font-bold text-white truncate">{task.title}</p>
+                  {task.description && (
+                    <p className="text-secondary-text text-gray-400 mt-1 line-clamp-1">{task.description}</p>
+                  )}
+                </div>
+              </button>
+            ))}
           </div>
         )}
       </div>
 
-      {/* 4. Focus Session Shortcut */}
-      <button onClick={() => navigate('/focus')}
-        className="w-full glass-card p-4 flex items-center justify-between bg-gradient-to-r from-[#8B5CF6]/10 to-transparent border border-[#8B5CF6]/20 active:scale-[0.99] transition-all">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#8B5CF6]/15 text-[#8B5CF6] flex items-center justify-center">
-            <Play className="w-4 h-4 fill-current" />
+      {/* 4. Continue Where You Left Off */}
+      <div className="space-y-3">
+        <p className="text-label text-gray-500 uppercase tracking-widest font-bold px-1">Resume Routine</p>
+        <button onClick={() => navigate('/focus')}
+          className="w-full p-5 rounded-[20px] bg-[#121826] border border-white/5 flex items-center justify-between text-left active:scale-[0.99] transition-all">
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-2xl bg-violet-500/10 text-violet-400 flex items-center justify-center">
+              <BookOpen className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-card-title text-white font-extrabold">{lastStudyContext.title}</h4>
+              <p className="text-secondary-text text-gray-400 mt-0.5">{lastStudyContext.subtitle}</p>
+            </div>
           </div>
-          <div className="text-left">
-            <h4 className="text-card-title text-white font-bold leading-tight">Start Focus Session</h4>
-            <p className="text-label text-gray-400 mt-0.5">Activate immersive study timer</p>
-          </div>
-        </div>
-        <span className="text-secondary-text text-gray-400 font-bold px-2">Go →</span>
-      </button>
-
-      {/* 5. AI Recommendation */}
-      <div className="glass-card p-4 bg-[#141B2D] flex items-start gap-3 border border-white/5">
-        <div className="w-8 h-8 rounded-xl bg-violet-500/10 text-[#8B5CF6] flex items-center justify-center shrink-0 mt-0.5">
-          <Sparkles className="w-4 h-4" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-label text-gray-400 font-bold uppercase tracking-wider">Growth Recommendation</p>
-          <p className="text-secondary-text text-gray-300 mt-1 leading-relaxed">
-            {lifeScore >= 75
-              ? `Outstanding momentum, ${profile.name || 'Hemaprasad'}. Let's push for 100% daily alignment today.`
-              : completedTasks === 0 && todayTasks.length > 0
-              ? `Check off your first task to jump-start your daily productivity score.`
-              : `Completing your study targets today will add 20+ XP to your rank.`}
-          </p>
-        </div>
+          <span className="text-label text-violet-400 font-bold">{lastStudyContext.desc} →</span>
+        </button>
       </div>
 
-      {/* 6. Quick Stats Grid */}
-      <div className="grid grid-cols-4 gap-3">
-        {[
-          { label: 'Tasks', value: `${completedTasks}/${todayTasks.length}`, icon: CheckSquare, color: '#8B5CF6' },
-          { label: 'Streak', value: `${completedHabits}🔥`, icon: Flame, color: '#F59E0B' },
-          { label: 'Focus', value: todayFocusMin > 0 ? `${todayFocusMin}m` : '0m', icon: Play, color: '#22C55E' },
-          { label: 'XP', value: `${totalXP}`, icon: Target, color: '#8B5CF6' },
-        ].map((stat, i) => (
-          <div key={i} className="glass-card p-3 flex flex-col gap-1 items-center justify-center text-center bg-[#141B2D]">
-            <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
-            <span className="text-body font-black text-white mt-1 leading-tight">{stat.value}</span>
-            <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">{stat.label}</span>
-          </div>
-        ))}
+      {/* 5. Jarvis AI Coach Message */}
+      <div className="flex gap-3.5 items-start py-2">
+        <div className="w-9 h-9 rounded-xl bg-violet-500/10 text-[#8B5CF6] flex items-center justify-center shrink-0 mt-1">
+          <Sparkles className="w-4.5 h-4.5" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-label text-gray-500 uppercase tracking-widest font-bold">AI Companion</p>
+          <p className="text-body text-gray-300 mt-1.5 leading-relaxed font-medium">
+            {todayTasks.length > 0 
+              ? "Yesterday you studied well after dinner. Focus on completing your daily priorities early today."
+              : "Let's build momentum. Log a priority task to design your timeline for the day."}
+          </p>
+        </div>
       </div>
 
     </div>
