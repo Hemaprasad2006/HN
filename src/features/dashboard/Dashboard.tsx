@@ -1,63 +1,21 @@
 import { useMemo } from 'react';
-import { useNavigate, Link } from 'react-router';
+import { useNavigate } from 'react-router';
 import { format, subDays } from 'date-fns';
-import {
-  BarChart,
-  Bar,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
-import {
-  CheckCircle2,
-  Repeat,
-  BookOpen,
-  Droplets,
-  Moon,
-  Dumbbell,
-  Plus,
-  Crosshair,
-  PenLine,
-  ArrowRight,
-  Sparkles,
-  Target,
-  Clock,
-  Trophy,
-  Quote,
-} from 'lucide-react';
-
 import { useSettingsStore } from '@/stores/useSettingsStore.ts';
 import { usePlannerStore } from '@/stores/usePlannerStore.ts';
 import { useHabitStore } from '@/stores/useHabitStore.ts';
 import { useStudyStore } from '@/stores/useStudyStore.ts';
 import { useHealthStore } from '@/stores/useHealthStore.ts';
-import { useGoalStore } from '@/stores/useGoalStore.ts';
 import { useGameStore } from '@/stores/useGameStore.ts';
-import { getGreeting, getDateKey, formatDuration, percentage, cn } from '@/utils/helpers.ts';
-import { motivationalQuotes, goalCategoryConfig } from '@/data/constants.ts';
+import { useFocusStore } from '@/stores/useFocusStore.ts';
+import { getGreeting, getDateKey, formatDuration, percentage, getLevel, getLevelProgress, cn } from '@/utils/helpers.ts';
+import { motivationalQuotes } from '@/data/constants.ts';
+import { CheckCircle2, Circle, Droplets, Timer, Flame, ArrowRight, Sparkles, BookOpen } from 'lucide-react';
 
 function getDailyQuote() {
   const d = new Date();
   const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
   return motivationalQuotes[seed % motivationalQuotes.length];
-}
-
-function ChartTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-lg border border-white/10 bg-slate-900/95 px-3 py-2 text-xs shadow-xl backdrop-blur-sm">
-      <p className="mb-1 font-medium text-gray-300">{label}</p>
-      {payload.map((entry: any, i: number) => (
-        <p key={i} style={{ color: entry.color }} className="font-semibold">
-          {entry.name}: {entry.value}
-          {entry.name === 'Completion' ? '%' : 'h'}
-        </p>
-      ))}
-    </div>
-  );
 }
 
 export function Dashboard() {
@@ -69,359 +27,215 @@ export function Dashboard() {
   const tasks = usePlannerStore((s) => s.tasks);
   const toggleTask = usePlannerStore((s) => s.toggleTask);
   const habits = useHabitStore((s) => s.habits);
-  const habitLogs = useHabitStore((s) => s.logs);
-  const sessions = useStudyStore((s) => s.sessions);
+  const getLogsForDate = useHabitStore((s) => s.getLogsForDate);
+  const toggleHabitLog = useHabitStore((s) => s.toggleHabitLog);
+  const getTotalHours = useStudyStore((s) => s.getTotalHours);
   const healthLogs = useHealthStore((s) => s.healthLogs);
-  const exerciseLogs = useHealthStore((s) => s.exerciseLogs);
   const addWater = useHealthStore((s) => s.addWater);
-  const goals = useGoalStore((s) => s.goals);
+  const xp = useGameStore((s) => s.totalXP);
+  const getTodayFocusMinutes = useFocusStore((s) => s.getTodayFocusMinutes);
 
   const todayTasks = useMemo(() => tasks.filter((t) => t.dueDate === todayKey), [tasks, todayKey]);
-  const tasksCompleted = todayTasks.filter((t) => t.status === 'done').length;
+  const completedTasks = todayTasks.filter((t) => t.status === 'done').length;
+  const todayHabitLogs = useMemo(() => getLogsForDate(todayKey), [getLogsForDate, todayKey]);
+  const completedHabits = todayHabitLogs.filter((l) => l.completed).length;
+  const weekStudyHours = useMemo(() => getTotalHours(7), [getTotalHours]);
+  const todayFocusMin = useMemo(() => getTodayFocusMinutes(), [getTodayFocusMinutes]);
+  const todayHealth = healthLogs.find((l) => l.date === todayKey);
+  const waterPct = todayHealth ? Math.min(100, Math.round((todayHealth.waterIntake / (profile.targetWater || 3000)) * 100)) : 0;
 
-  const activeHabits = useMemo(() => habits.filter((h) => !h.archived), [habits]);
-  const habitsCompleted = useMemo(
-    () => habitLogs.filter((l) => l.date === todayKey && l.completed).length,
-    [habitLogs, todayKey],
-  );
+  const lifeScore = useMemo(() => {
+    const taskScore = todayTasks.length > 0 ? (completedTasks / todayTasks.length) * 25 : 25;
+    const habitScore = habits.length > 0 ? (completedHabits / habits.length) * 25 : 25;
+    const waterScore = waterPct * 0.25;
+    const focusScore = Math.min(25, (todayFocusMin / 120) * 25);
+    return Math.round(taskScore + habitScore + waterScore + focusScore);
+  }, [completedTasks, todayTasks.length, completedHabits, habits.length, waterPct, todayFocusMin]);
 
-  const todayStudyMinutes = useMemo(
-    () => sessions.filter((s) => s.startTime.startsWith(todayKey)).reduce((sum, s) => sum + s.durationMinutes, 0),
-    [sessions, todayKey],
-  );
-  const todayStudyHours = Math.round((todayStudyMinutes / 60) * 10) / 10;
+  const nextTask = useMemo(() => todayTasks.find((t) => t.status !== 'done'), [todayTasks]);
+  const quote = useMemo(() => getDailyQuote(), []);
+  const greeting = getGreeting();
+  const hour = new Date().getHours();
+  const timeContext = hour < 12 ? 'Plan your day' : hour < 17 ? 'Time to execute' : 'Reflect & recharge';
 
-  const todayHealthLog = useMemo(() => healthLogs.find((l) => l.date === todayKey), [healthLogs, todayKey]);
-  const waterIntake = todayHealthLog?.waterIntake ?? 0;
-  const sleepHours = todayHealthLog?.sleepHours ?? 0;
-
-  const workedOut = useMemo(() => exerciseLogs.some((l) => l.date === todayKey), [exerciseLogs, todayKey]);
-
-  const overallProgress = useMemo(() => {
-    const taskPct = todayTasks.length > 0 ? percentage(tasksCompleted, todayTasks.length) : 0;
-    const habitPct = activeHabits.length > 0 ? percentage(habitsCompleted, activeHabits.length) : 0;
-    const studyPct = profile.targetStudyHours > 0 ? Math.min(100, percentage(todayStudyMinutes, profile.targetStudyHours * 60)) : 0;
-    const buckets = [todayTasks.length > 0, activeHabits.length > 0, profile.targetStudyHours > 0].filter(Boolean).length;
-    return buckets > 0 ? Math.round((taskPct + habitPct + studyPct) / buckets) : 0;
-  }, [tasksCompleted, todayTasks, habitsCompleted, activeHabits, todayStudyMinutes, profile.targetStudyHours]);
-
-  const dailyQuote = useMemo(() => getDailyQuote(), []);
-
-  const habitChartData = useMemo(() => {
-    const totalActive = activeHabits.length || 1;
-    return Array.from({ length: 7 }, (_, i) => {
-      const day = subDays(today, 6 - i);
-      const key = getDateKey(day);
-      const completed = habitLogs.filter((l) => l.date === key && l.completed).length;
-      return { day: format(day, 'EEE'), Completion: Math.round((completed / totalActive) * 100) };
-    });
-  }, [habitLogs, activeHabits, today]);
-
-  const studyChartData = useMemo(() => {
-    return Array.from({ length: 7 }, (_, i) => {
-      const day = subDays(today, 6 - i);
-      const key = getDateKey(day);
-      const mins = sessions.filter((s) => s.startTime.startsWith(key)).reduce((sum, s) => sum + s.durationMinutes, 0);
-      return { day: format(day, 'EEE'), Hours: Math.round((mins / 60) * 10) / 10 };
-    });
-  }, [sessions, today]);
-
-  const activeGoals = useMemo(() => goals.filter((g) => !g.archived).slice(0, 4), [goals]);
-
-  const statCards = [
-    { label: 'Tasks', value: `${tasksCompleted}/${todayTasks.length}`, icon: CheckCircle2, textColor: 'text-indigo-400', bgAccent: 'bg-indigo-500/10', glow: 'stat-glow-indigo' },
-    { label: 'Habits', value: `${habitsCompleted}/${activeHabits.length}`, icon: Repeat, textColor: 'text-emerald-400', bgAccent: 'bg-emerald-500/10', glow: 'stat-glow-emerald' },
-    { label: 'Study', value: `${todayStudyHours}h`, icon: BookOpen, textColor: 'text-violet-400', bgAccent: 'bg-violet-500/10', glow: 'stat-glow-violet' },
-    { label: 'Water', value: `${waterIntake}ml`, icon: Droplets, textColor: 'text-cyan-400', bgAccent: 'bg-cyan-500/10', glow: 'stat-glow-cyan' },
-    { label: 'Sleep', value: `${sleepHours}h`, icon: Moon, textColor: 'text-amber-400', bgAccent: 'bg-amber-500/10', glow: 'stat-glow-amber' },
-    { label: 'Workout', value: workedOut ? '✓ Done' : 'Pending', icon: Dumbbell, textColor: 'text-rose-400', bgAccent: 'bg-rose-500/10', glow: 'stat-glow-rose' },
-  ];
-
-  const priorityDot: Record<string, string> = { high: 'bg-rose-500', medium: 'bg-amber-500', low: 'bg-emerald-500' };
-  const CIRCUMFERENCE = 2 * Math.PI * 52;
+  const radius = 44;
+  const circ = 2 * Math.PI * radius;
+  const dashOffset = circ - (lifeScore / 100) * circ;
+  const scoreColor = lifeScore > 70 ? '#10b981' : lifeScore > 40 ? '#f59e0b' : '#ef4444';
 
   return (
-    <div className="space-y-4 md:space-y-6 pb-2">
+    <div className="animate-fade-in space-y-5">
+      <div className="flex items-start justify-between">
+        <div className="flex-1 min-w-0">
+          <p className="text-2xs font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+            {format(today, 'EEEE, MMM d')} · {timeContext}
+          </p>
+          <h1 className="mt-1 font-extrabold leading-tight" style={{ fontSize: 'clamp(20px, 6vw, 28px)', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
+            {greeting}, {profile.name || 'Hemaprasad'} 👋
+          </h1>
+        </div>
+        <div className="life-score-ring shrink-0 ml-3">
+          <svg width="64" height="64" viewBox="0 0 100 100">
+            <circle className="progress-ring-track" cx="50" cy="50" r={radius} strokeWidth="10" />
+            <circle className="progress-ring-fill" cx="50" cy="50" r={radius} strokeWidth="10"
+              stroke={scoreColor} strokeDasharray={circ} strokeDashoffset={dashOffset} />
+          </svg>
+          <div className="life-score-value">
+            <p className="font-extrabold text-center" style={{ fontSize: 14, color: 'var(--text-primary)', lineHeight: 1 }}>{lifeScore}</p>
+            <p style={{ fontSize: 8, color: 'var(--text-muted)', textAlign: 'center' }}>SCORE</p>
+          </div>
+        </div>
+      </div>
 
-      {/* ── 1. HERO ── */}
-      <section className="glass-card animate-fade-in relative overflow-hidden p-4 md:p-6">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-indigo-500/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-violet-500/10 blur-3xl" />
-
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          {/* Left */}
-          <div className="space-y-2 min-w-0">
-            <h1 className="gradient-text text-2xl md:text-3xl font-bold tracking-tight truncate">
-              {getGreeting()}, {profile.name || 'User'} 👋
-            </h1>
-
-            <p className="flex items-center gap-1.5 text-xs text-gray-400">
-              <Clock className="h-3.5 w-3.5 shrink-0" />
-              {format(today, 'EEEE, MMMM d')}
-            </p>
-
-            {/* Quote */}
-            <div className="flex items-start gap-2 rounded-xl bg-white/[0.04] p-3 max-w-md">
-              <Quote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-indigo-400" />
-              <div>
-                <p className="text-xs italic leading-relaxed text-gray-300 line-clamp-2">
-                  &ldquo;{dailyQuote.text}&rdquo;
+      {nextTask ? (
+        <button onClick={() => navigate('/planner')} className="mission-card w-full text-left group">
+          <div className="flex items-start justify-between relative z-10">
+            <div className="flex-1 min-w-0">
+              <p className="text-2xs font-bold uppercase tracking-widest mb-1.5" style={{ color: '#a5b4fc' }}>TODAY'S MISSION</p>
+              <p className="font-bold leading-snug" style={{ fontSize: 'clamp(14px, 4vw, 17px)', color: '#f0f2ff' }}>{nextTask.title}</p>
+              {nextTask.estimatedMinutes > 0 && (
+                <p className="mt-1 text-[11px] font-medium" style={{ color: '#8892b0' }}>
+                  ⏱ {formatDuration(nextTask.estimatedMinutes)} · {nextTask.priority} priority
                 </p>
-                <p className="mt-1 text-[10px] text-gray-500">&mdash; {dailyQuote.author}</p>
-              </div>
-            </div>
-
-            {profile.dailyFocus && (
-              <div className="flex items-center gap-2">
-                <Target className="h-3.5 w-3.5 shrink-0 text-violet-400" />
-                <span className="text-xs font-medium text-gray-300">Focus:</span>
-                <span className="text-xs text-gray-400 truncate">{profile.dailyFocus}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Progress ring — smaller on mobile */}
-          <div className="flex flex-col items-center gap-1.5 shrink-0 self-center">
-            <div className="relative flex h-24 w-24 md:h-28 md:w-28 items-center justify-center">
-              <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 120 120">
-                <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
-                <circle
-                  cx="60" cy="60" r="52" fill="none" stroke="url(#progressGrad)"
-                  strokeWidth="8" strokeLinecap="round"
-                  strokeDasharray={`${(overallProgress / 100) * CIRCUMFERENCE} ${CIRCUMFERENCE}`}
-                  className="transition-all duration-1000 ease-out"
-                />
-                <defs>
-                  <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#6366f1" />
-                    <stop offset="50%" stopColor="#8b5cf6" />
-                    <stop offset="100%" stopColor="#ec4899" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div className="relative z-10 text-center">
-                <p className="gradient-text text-2xl md:text-3xl font-bold">{overallProgress}%</p>
-                <p className="text-[9px] uppercase tracking-widest text-gray-500">Today</p>
-              </div>
-            </div>
-            <p className="text-[11px] font-medium text-gray-400">Overall Progress</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 2. STAT CARDS ── */}
-      <section className="grid grid-cols-3 gap-2 md:grid-cols-6 md:gap-3">
-        {statCards.map((card, i) => {
-          const Icon = card.icon;
-          return (
-            <div
-              key={card.label}
-              className={cn('glass-card animate-fade-in p-3 md:p-4', card.glow)}
-              style={{ opacity: 0, animationDelay: `${i * 80}ms` }}
-            >
-              <div className={cn('mb-2 inline-flex rounded-lg p-1.5 md:p-2', card.bgAccent)}>
-                <Icon className={cn('h-3.5 w-3.5 md:h-4 md:w-4', card.textColor)} />
-              </div>
-              <p className="text-[10px] md:text-xs text-gray-500 leading-tight">{card.label}</p>
-              <p className={cn('mt-0.5 text-sm md:text-base font-bold leading-tight', card.textColor)}>{card.value}</p>
-            </div>
-          );
-        })}
-      </section>
-
-      {/* ── 3. QUICK ACTIONS ── */}
-      <section className="animate-fade-in animation-delay-300" style={{ opacity: 0 }}>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
-          {[
-            { label: 'Add Task', icon: Plus, gradient: 'from-indigo-500 to-violet-500', onClick: () => navigate('/planner') },
-            { label: 'Start Focus', icon: Crosshair, gradient: 'from-violet-500 to-purple-600', onClick: () => navigate('/focus') },
-            { label: '+250ml Water', icon: Droplets, gradient: 'from-cyan-500 to-teal-500', onClick: () => addWater(250) },
-            { label: 'Quick Journal', icon: PenLine, gradient: 'from-amber-500 to-orange-500', onClick: () => navigate('/journal') },
-          ].map((btn) => {
-            const BtnIcon = btn.icon;
-            return (
-              <button
-                key={btn.label}
-                onClick={btn.onClick}
-                className={cn(
-                  'flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r px-4 py-2.5 text-xs md:text-sm font-semibold text-white shadow-lg transition-all hover:brightness-110 active:scale-95 sm:w-auto',
-                  btn.gradient,
-                )}
-              >
-                <BtnIcon className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
-                {btn.label}
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ── 4. CHARTS ── */}
-      <section className="grid gap-4 md:gap-6 lg:grid-cols-2">
-        <div className="glass-card animate-fade-in animation-delay-400 p-4 md:p-5" style={{ opacity: 0 }}>
-          <div className="mb-3 flex items-center gap-2">
-            <div className="rounded-lg bg-emerald-500/10 p-1.5">
-              <Repeat className="h-3.5 w-3.5 text-emerald-400" />
-            </div>
-            <h3 className="text-xs md:text-sm font-semibold text-gray-200">Weekly Habit Trend</h3>
-          </div>
-          <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={habitChartData} barSize={20}>
-              <defs>
-                <linearGradient id="habitGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
-                  <stop offset="100%" stopColor="#059669" stopOpacity={0.5} />
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10 }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} domain={[0, 100]} tickFormatter={(v) => `${v}%`} width={32} />
-              <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="Completion" fill="url(#habitGrad)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="glass-card animate-fade-in animation-delay-500 p-4 md:p-5" style={{ opacity: 0 }}>
-          <div className="mb-3 flex items-center gap-2">
-            <div className="rounded-lg bg-violet-500/10 p-1.5">
-              <BookOpen className="h-3.5 w-3.5 text-violet-400" />
-            </div>
-            <h3 className="text-xs md:text-sm font-semibold text-gray-200">Study Hours This Week</h3>
-          </div>
-          <ResponsiveContainer width="100%" height={160}>
-            <AreaChart data={studyChartData}>
-              <defs>
-                <linearGradient id="studyGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.4} />
-                  <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10 }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} tickFormatter={(v) => `${v}h`} width={28} />
-              <Tooltip content={<ChartTooltip />} />
-              <Area type="monotone" dataKey="Hours" stroke="#8b5cf6" strokeWidth={2} fill="url(#studyGrad)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </section>
-
-      {/* ── 5 & 6. TASKS + GOALS ── */}
-      <section className="grid gap-4 md:gap-6 lg:grid-cols-2">
-
-        {/* Today's Tasks */}
-        <div className="glass-card animate-fade-in animation-delay-400 p-4 md:p-5" style={{ opacity: 0 }}>
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="rounded-lg bg-indigo-500/10 p-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-indigo-400" />
-              </div>
-              <h3 className="text-xs md:text-sm font-semibold text-gray-200">Today&apos;s Tasks</h3>
-            </div>
-            <Link to="/planner" className="flex items-center gap-1 text-[11px] font-medium text-indigo-400 hover:text-indigo-300 transition-colors">
-              View All <ArrowRight className="h-3 w-3" />
-            </Link>
-          </div>
-
-          {todayTasks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-6 text-center">
-              <Sparkles className="mb-2 h-6 w-6 text-gray-600" />
-              <p className="text-xs text-gray-500">No tasks for today</p>
-              <button onClick={() => navigate('/planner')} className="mt-2 text-[11px] font-medium text-indigo-400 hover:text-indigo-300">
-                Plan your day →
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {todayTasks.slice(0, 5).map((task) => (
-                <div
-                  key={task.id}
-                  className={cn('flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition-all hover:bg-white/[0.04]', task.status === 'done' && 'opacity-50')}
-                >
-                  <button
-                    onClick={() => toggleTask(task.id)}
-                    className={cn(
-                      'flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-md border-2 transition-all',
-                      task.status === 'done' ? 'border-indigo-500 bg-indigo-500' : 'border-gray-600 hover:border-indigo-400',
-                    )}
-                  >
-                    {task.status === 'done' && <CheckCircle2 className="h-2.5 w-2.5 text-white" />}
-                  </button>
-
-                  <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', priorityDot[task.priority] ?? 'bg-gray-500')} />
-
-                  <span className={cn('flex-1 truncate text-xs md:text-sm', task.status === 'done' ? 'text-gray-500 line-through' : 'text-gray-200')}>
-                    {task.title}
-                  </span>
-
-                  {task.estimatedMinutes > 0 && (
-                    <span className="shrink-0 text-[10px] text-gray-500">{formatDuration(task.estimatedMinutes)}</span>
-                  )}
-                </div>
-              ))}
-              {todayTasks.length > 5 && (
-                <p className="pt-1 text-center text-[10px] text-gray-500">+{todayTasks.length - 5} more</p>
               )}
             </div>
-          )}
-        </div>
-
-        {/* Active Goals */}
-        <div className="glass-card animate-fade-in animation-delay-500 p-4 md:p-5" style={{ opacity: 0 }}>
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="rounded-lg bg-amber-500/10 p-1.5">
-                <Trophy className="h-3.5 w-3.5 text-amber-400" />
-              </div>
-              <h3 className="text-xs md:text-sm font-semibold text-gray-200">Active Goals</h3>
-            </div>
-            <Link to="/goals" className="flex items-center gap-1 text-[11px] font-medium text-amber-400 hover:text-amber-300 transition-colors">
-              View All <ArrowRight className="h-3 w-3" />
-            </Link>
+            <ArrowRight className="w-5 h-5 mt-1 shrink-0 ml-3 transition-transform group-hover:translate-x-1" style={{ color: '#818cf8' }} />
           </div>
-
-          {activeGoals.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-6 text-center">
-              <Target className="mb-2 h-6 w-6 text-gray-600" />
-              <p className="text-xs text-gray-500">No active goals yet</p>
-              <button onClick={() => navigate('/goals')} className="mt-2 text-[11px] font-medium text-amber-400 hover:text-amber-300">
-                Set your first goal →
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {activeGoals.map((goal) => {
-                const catConfig = goalCategoryConfig[goal.category];
-                const daysLeft = Math.max(0, Math.ceil((new Date(goal.deadline).getTime() - today.getTime()) / 86_400_000));
-                return (
-                  <div key={goal.id} className="rounded-xl px-2.5 py-2.5 transition-all hover:bg-white/[0.04]">
-                    <div className="mb-1.5 flex items-center justify-between">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-sm">{catConfig?.icon ?? '🎯'}</span>
-                        <span className="truncate text-xs md:text-sm font-medium text-gray-200">{goal.title}</span>
-                      </div>
-                      <span
-                        className={cn(
-                          'shrink-0 ml-2 rounded-full px-1.5 py-0.5 text-[9px] font-semibold',
-                          daysLeft <= 7 ? 'bg-rose-500/15 text-rose-400' : daysLeft <= 30 ? 'bg-amber-500/15 text-amber-400' : 'bg-emerald-500/15 text-emerald-400',
-                        )}
-                      >
-                        {daysLeft}d
-                      </span>
-                    </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/[0.05]">
-                      <div
-                        className="progress-bar-fill h-full rounded-full"
-                        style={{ width: `${goal.progress}%`, background: catConfig?.color ?? '#6366f1' }}
-                      />
-                    </div>
-                    <p className="mt-1 text-right text-[10px] text-gray-500">{goal.progress}%</p>
-                  </div>
-                );
-              })}
+          {todayTasks.length > 0 && (
+            <div className="mt-4 relative z-10">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-semibold" style={{ color: '#8892b0' }}>{completedTasks}/{todayTasks.length} tasks done</span>
+                <span className="text-[10px] font-bold" style={{ color: '#a5b4fc' }}>{percentage(completedTasks, todayTasks.length)}%</span>
+              </div>
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                <div className="h-full rounded-full transition-all duration-700" style={{ width: `${percentage(completedTasks, todayTasks.length)}%`, background: 'linear-gradient(90deg,#6366f1,#8b5cf6)' }} />
+              </div>
             </div>
           )}
+        </button>
+      ) : (
+        <div className="mission-card w-full text-center py-6">
+          <div className="text-3xl mb-2">🎉</div>
+          <p className="font-bold" style={{ color: '#a5b4fc', fontSize: 15 }}>All tasks complete!</p>
+          <p className="text-xs mt-1" style={{ color: '#8892b0' }}>Outstanding work today.</p>
         </div>
-      </section>
+      )}
+
+      <div className="grid grid-cols-4 gap-2">
+        {[
+          { label: 'Tasks', value: `${completedTasks}/${todayTasks.length}`, icon: <CheckCircle2 className="w-4 h-4" />, color: '#6366f1', glow: 'stat-glow-indigo' },
+          { label: 'Habits', value: `${completedHabits}/${habits.length}`, icon: <Flame className="w-4 h-4" />, color: '#f59e0b', glow: 'stat-glow-amber' },
+          { label: 'Focus', value: todayFocusMin > 0 ? `${todayFocusMin}m` : '—', icon: <Timer className="w-4 h-4" />, color: '#8b5cf6', glow: 'stat-glow-violet' },
+          { label: 'Study', value: `${Math.round(weekStudyHours * 10) / 10}h`, icon: <BookOpen className="w-4 h-4" />, color: '#10b981', glow: 'stat-glow-emerald' },
+        ].map((stat, i) => (
+          <div key={i} className={`glass-card stat-card animate-slide-in-up ${stat.glow}`} style={{ animationDelay: `${i * 60}ms` }}>
+            <div style={{ color: stat.color }}>{stat.icon}</div>
+            <p className="stat-card-value">{stat.value}</p>
+            <p className="stat-card-label">{stat.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="insight-card">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(16,185,129,0.15)' }}>
+            <Sparkles className="w-4 h-4" style={{ color: '#10b981' }} />
+          </div>
+          <div>
+            <p className="text-2xs font-bold uppercase tracking-widest mb-1" style={{ color: '#10b981' }}>AI INSIGHT</p>
+            <p className="text-xs leading-relaxed font-medium" style={{ color: 'var(--text-secondary)' }}>
+              {lifeScore >= 75
+                ? `You're crushing it, ${profile.name?.split(' ')[0] || 'Hemaprasad'}! Keep this momentum going.`
+                : completedHabits === 0 && habits.length > 0
+                ? 'Start with one habit to build momentum — small wins compound into big results.'
+                : nextTask
+                ? `Focus on "${nextTask.title}" next. Completing it will boost your score.`
+                : `Great week! You've studied ${Math.round(weekStudyHours * 10) / 10}h — keep the streak going.`
+              }
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {habits.filter((h) => !h.archived).length > 0 && (
+        <div>
+          <div className="section-title">
+            <span>Habits Today</span>
+            <button onClick={() => navigate('/habits')} className="text-[10px] font-semibold" style={{ color: '#818cf8' }}>All →</button>
+          </div>
+          <div className="flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+            {habits.filter((h) => !h.archived).slice(0, 8).map((habit) => {
+              const log = todayHabitLogs.find((l) => l.habitId === habit.id);
+              const done = log?.completed ?? false;
+              return (
+                <button key={habit.id} onClick={() => toggleHabitLog(habit.id, todayKey)} className={`habit-pill shrink-0 ${done ? 'completed' : ''}`}>
+                  <div className="habit-pill-icon" style={{ background: done ? `${habit.color}25` : 'rgba(255,255,255,0.04)' }}>
+                    {done ? '✓' : (habit.icon || '⭐')}
+                  </div>
+                  <span className="habit-pill-name">{habit.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {todayTasks.length > 0 && (
+        <div>
+          <div className="section-title">
+            <span>Today's Tasks</span>
+            <button onClick={() => navigate('/planner')} className="text-[10px] font-semibold" style={{ color: '#818cf8' }}>Planner →</button>
+          </div>
+          <div className="space-y-2">
+            {todayTasks.slice(0, 5).map((task, i) => {
+              const done = task.status === 'done';
+              return (
+                <button key={task.id} onClick={() => toggleTask(task.id)}
+                  className={cn('w-full glass-card p-3 flex items-center gap-3 text-left animate-slide-in-up',
+                    task.priority === 'high' ? 'priority-high' : task.priority === 'medium' ? 'priority-medium' : 'priority-low')}
+                  style={{ animationDelay: `${i * 50}ms` }}
+                >
+                  <div className="shrink-0">
+                    {done ? <CheckCircle2 className="w-5 h-5" style={{ color: '#10b981' }} /> : <Circle className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={cn('text-sm font-semibold truncate', done && 'line-through opacity-50')} style={{ color: 'var(--text-primary)' }}>{task.title}</p>
+                    {task.estimatedMinutes > 0 && !done && <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{formatDuration(task.estimatedMinutes)}</p>}
+                  </div>
+                </button>
+              );
+            })}
+            {todayTasks.length > 5 && <button onClick={() => navigate('/planner')} className="w-full text-center py-2 text-xs font-semibold" style={{ color: '#818cf8' }}>+{todayTasks.length - 5} more →</button>}
+          </div>
+        </div>
+      )}
+
+      <div>
+        <div className="section-title">Hydration</div>
+        <div className="glass-card p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Droplets className="w-4 h-4" style={{ color: '#06b6d4' }} />
+              <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{((todayHealth?.waterIntake || 0) / 1000).toFixed(1)}L / {((profile.targetWater || 3000) / 1000).toFixed(1)}L</span>
+            </div>
+            <span className="text-sm font-bold" style={{ color: '#06b6d4' }}>{waterPct}%</span>
+          </div>
+          <div className="h-2 rounded-full overflow-hidden mb-3" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <div className="h-full rounded-full transition-all duration-700" style={{ width: `${waterPct}%`, background: 'linear-gradient(90deg,#06b6d4,#0284c7)' }} />
+          </div>
+          <div className="flex gap-2">
+            {[250, 500, 750].map((ml) => (
+              <button key={ml} onClick={() => addWater(ml)} className="flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-95"
+                style={{ background: 'rgba(6,182,212,0.1)', color: '#06b6d4', border: '1px solid rgba(6,182,212,0.2)' }}>+{ml}ml</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="glass-card p-5">
+        <p className="text-xs leading-relaxed font-medium italic" style={{ color: 'var(--text-secondary)' }}>"{quote.text}"</p>
+        <p className="text-[10px] mt-2 font-bold" style={{ color: 'var(--text-muted)' }}>— {quote.author}</p>
+      </div>
     </div>
   );
 }
